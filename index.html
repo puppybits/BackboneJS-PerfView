@@ -163,6 +163,15 @@ window.stressTests = {
         if (stop) return document.body.className = '';
         
         document.body.className = 'stress-test-css';
+    },
+    loadimages: function(stop){
+        if (stop)
+            return ListItem.modelMap.pokefile['img.pokéfile'] = 
+                function(){};
+        ListItem.modelMap.pokefile['img.pokéfile'] = 
+            function setProfile($cachedElement, value){
+                $cachedElement[0].src = value;
+            }
     }
 };
 
@@ -222,6 +231,7 @@ console.time('create model');
 
 
 var ListItem = Backbone.ReuseView.extend({
+    // NOTE: naming functions helps to see the impact in the devTools profiler
     modelMap: {
         'pokestatus': ['.pokéstatus', 
             function setStatus($cachedElement, value){
@@ -261,7 +271,6 @@ var ListItem = Backbone.ReuseView.extend({
             }
         ],
     },
-    standardHeight: 124,
     
     partial: $('.listItem').text(),
     
