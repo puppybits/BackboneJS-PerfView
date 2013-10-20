@@ -33,7 +33,7 @@ var config = {
 },
 throttleFastCheck = 0,
 debug = {
-    profile: true, // allow auto-on when heavy loads are hit
+    profile: false, // allow auto-on when heavy loads are hit
     fps: true // super light and informative inspection of scroll perfromance
 },
 reportFPS = function(t, delta)
