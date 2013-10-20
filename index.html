@@ -1,86 +1,276 @@
 <html>
 <head>
-
+<meta name="viewport" content="width=device-width">
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,800' rel='stylesheet' type='text/css'>
 <script src="jquery.min.js"></script>
 <script src="underscore-min.js" ></script>
 <script src="backbone-min.js"></script>
-<script type="application/javascript" src="iscroll-lite.js"></script>
+
 <script src="PoolContainerView.js"></script>
 <script src="ReuseView.js"></script>
 <style>
-/* 13:35:43 04/09/2013 [http://oystatic.ignimgs.com/src/core/css/widgets/global/page/blogrollarticles.css, http://oystatic.ignimgs.com/src/core/css/poilib/base.css, http://oystatic.ignimgs.com/src/core/css/poilib/listElementArticleV1_5.css, http://oystatic.ignimgs.com/src/core/css/widgets/global/interrupts/dailyfix.css, http://oystatic.ignimgs.com/src/core/css/widgets/global/wikis/trendingwikis.css]*/
-.blogrollContainer .clear:after,.ign-blogrollFilters.ul:after{clear:both;content:".";display:block;height:0;visibility:hidden}.blogrollContainer{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#3a3939;margin:0 0 12px 0;clear:both}.blogrollContainer p{font-size:14px;line-height:21px;margin:0}.blogrollContainer strong{font-weight:bold}.blogrollContainer ol,.blogrollContainer ul{list-style:none;margin:0;padding:0}.blogrollContainer a:link,.blogrollContainer a:visited{color:#039;text-decoration:none}.blogrollContainer a:hover,.blogrollContainer a:active{text-decoration:underline}.blogrollContainer a:active{color:#004d97}.blogrollContainer .interruptsContainer{overflow:hidden;border-bottom:1px dashed #a6a6a6;margin-bottom:12px}.blogrollContainer .interrupts{float:left}.blogrollContainer .interruptFirst{width:308px}.blogrollContainer .interruptLast{width:296px;margin-left:12px}.blogrollContainer button{background-color:#333;background:-moz-linear-gradient(top,#4d4d4d 0,#333 100%);background:-webkit-gradient(linear,left top,left bottom,color-stop(0%,#4d4d4d),color-stop(100%,#333));-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;font-family:"helvetica neue",arial,sans-serif;font-size:14px;font-weight:bold;color:white;border:0;background-size:100% 100%;width:100%;height:32px;cursor:pointer}.blogrollContainer button.loading{background-color:#ddd;background:-moz-linear-gradient(top,#fdfdfd 0,#ddd 100%);background:-webkit-gradient(linear,left top,left bottom,color-stop(0%,#fdfdfd),color-stop(100%,#ddd));color:#000}.ign-blogrollFiltersContainer{margin-top:12px}.blogrollContainer .ign-blogrollFilters{overflow:hidden;display:block;margin:0 0 12px 0;padding:0}.ign-blogrollFilters li{list-style:none outside;margin:0;padding:0;float:left}.ign-blogrollFilters li a,.ign-blogrollFilters li span{padding:0 5px 0 6px;font-size:14px;border-right:1px solid #ccc}.ign-blogrollFilters li.firstFilter a,.ign-blogrollFilters li.firstFilter span{padding-left:0}.ign-blogrollFilters li.lastFilter a,.ign-blogrollFilters li.lastFilter span{border:0}.ign-blogrollFilters li a.selected{color:#333;text-decoration:none}.ign-blogrollMainFilters{padding-top:12px;margin-bottom:4px;border-bottom:1px solid #ccc;position:relative;width:625px;height:30px}.blogrollContainer .ign-blogrollMainFilters a.selected{text-transform:uppercase;color:#000;font-weight:bold;font-size:16px;border:1px solid #ccc;border-bottom:1px solid #fff;bottom:-2px}.ign-blogrollMainFilters a{cursor:pointer;font-size:16px;padding:9px;position:relative;font-weight:bold}.ign-blogrollMainFilters .first.selected{border-left:0}.blogroll-noData{float:left}.blogroll-dropdown{display:none}.blogroll-dropdownContainer{display:none;font-size:11px;font-family:"helvetica neue",arial,sans-serif;border:1px solid #ededed;float:right;width:100px;cursor:pointer}.blogroll-downArrow{width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;float:right;border-top:3px solid #333;margin-top:6px}.nowLoading{position:absolute;display:none;height:32px;width:32px}.transition{opacity:.1}.interruptFull .interrupts{margin-top:-12px}.interruptsContainer.interruptFull{overflow:visible;border-bottom:0}.listElmnt-blogItem h3,.gameListItem h3{margin:0}a.moreLink{white-space:nowrap}.listElmnt-storyHeadline{font-size:16px;font-weight:bold}.listElmnt-date{text-transform:uppercase;font-size:11px;font-weight:normal;color:#808080;float:left}.listElmnt{border-bottom:1px dashed #999;border-bottom: 1px darkgrey dashed; padding-top: 12px;}.listElmnt.noBottomBorder{border-bottom:0;overflow:auto}.listElmnt-blogItem{margin-left:158px;margin-top:12px;margin-right:5px;line-height:21px;min-height:90px;margin-bottom:12px}.listElmnt-blogItem h3{padding:5px 0 2px 0}.listElmnt-storyHeadline{font-family:"proxima nova",sans-serif;font-weight:600;font-style:normal;font-size:18px;line-height:21px}.listElmnt-blogItem p{padding-right:12px}.listElmnt-date{text-transform:none;font-size:14px;font-weight:normal;color:#999;float:left}.listElmnt-bgIcons{background:url(/src/core/img/widgets/global/page/blogroll_theme_events.png) 0 0 no-repeat;padding:0 12px 0 18px;display:inline-block}.listElmnt-bgIcons.listElmnt-iconsComments{background-position:-9px -53px}.listElmnt-bgIcons.listElmnt-iconsImgs{background-position:-8px -210px}.listElmnt-tools{font-size:12px;font-weight:normal;margin-right:12px}.listElmnt-facebook,.listElmnt-twitter{background-image:url(/src/core/img/widgets/global/page/social_sprites_blogroll.png);display:inline-block;height:16px;width:17px;margin-right:6px}.listElmnt-facebook{background-position:-8px -93px}.listElmnt-twitter{background-position:-10px -12px}.listElmnt-facebook:hover{background-position:-8px -132px}.listElmnt-twitter:hover{background-position:-10px -51px}.listElmnt-img img,.listElmnt-vid div{border:4px solid #eee;margin-top:4px;max-height:100%;max-width:100%}.listElmnt-thumb .video-container{height:0;width:0}.listElmnt-thumb a{float:left;width:136px;overflow:hidden;position:relative}.listElmnt-thumb img{margin-top:7px;width:136px}.listElmnt-thumb .video-thumb:before{background:transparent url(/src/ignmedia/img/default/videoSprites.png) 0 -350px;content:'';height:20px;position:absolute;right:10px;top:17px;width:20px}.listElmnt-thumb .wiki-thumb:before{background-color:#ce2624;border:1px solid #840907;bottom:10px;box-shadow:inset 0 -1px 0 #ffc5c4;color:#ffc5c4;content:'Wiki';font-size:10px;height:20px;line-height:20px;position:absolute;right:-30px;text-align:center;text-shadow:0 -1px 0 #840907;text-transform:uppercase;transform:rotate(-45deg);-ms-transform:rotate(-45deg);-moz-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);-o-transform:rotate(-45deg);width:100px}.listElmnt-thumb .blog-thumb:before{background-color:#ce2624;border:1px solid #840907;bottom:10px;box-shadow:inset 0 -1px 0 #ffc5c4;color:#ffc5c4;content:'Blog';font-size:10px;height:20px;line-height:20px;position:absolute;right:-30px;text-align:center;text-shadow:0 -1px 0 #840907;text-transform:uppercase;transform:rotate(-45deg);-ms-transform:rotate(-45deg);-moz-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);-o-transform:rotate(-45deg);width:100px}#blogrollInterruptFix{position:relative;width:628px;height:414px;background-color:#fff;overflow:hidden;padding-bottom:12px;border-bottom:1px dashed #a6a6a6;margin-top:12px;font-size:0}.interruptFixLeft{display:inline-block;width:468px;height:363px;background-color:rgba(0,0,0,0.05)}.fixItem{position:relative;display:block;width:468px;height:363px}.fixImage{position:absolute;top:0;left:0;width:468px;height:261px;background-color:rgba(0,0,0,0.05)}.fixImage img{width:100%}.fixImage:before{position:absolute;left:19px;bottom:17px;content:'';display:block;width:69px;height:69px;background-image:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png);background-position:-13px -12px;background-repeat:no-repeat}.fixImage:hover:before{background-position:-107px -12px}.fixText{position:absolute;bottom:0;left:0;padding:16px;width:436px;height:70px;background-color:#000}.fixHeadline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Helvetica Neue,Arial,sans-serif;color:#fff;font-size:22px;line-height:1em}.fixDescription{font-family:Helvetica Neue,Arial,sans-serif;color:#bbb;font-size:13px;line-height:1.2em;margin-top:12px}.interruptFixRight{position:absolute;top:0;right:0;display:inline-block;width:155px;height:363px;margin-left:5px;background-color:rgba(0,0,0,0.05)}.hotlistItem{position:relative;display:block;width:155px;height:87px;overflow:hidden;margin-top:5px;background-color:rgba(0,0,0,0.05)}.hotlistItem:nth-child(1){margin-top:0}.hotlistImage{position:relative;width:155px;height:87px}.hotlistImage img{width:100%}.hotlistHeadline{position:absolute;bottom:-39px;z-index:5;height:32px;font-family:Helvetica Neue,Arial,sans-serif;color:rgba(255,255,255,0.0);font-size:13px;line-height:16px;padding:9px 6px 0 6px;background-color:rgba(0,0,0,0.0);-webkit-transition:.1s ease-in}.hotlistHeadline:after{position:absolute;bottom:-9px;left:0;content:'';display:block;width:155px;height:9px;background-color:rgba(0,0,0,0.7)}.hotlistHeadline:before{position:absolute;left:7px;top:-36px;content:'';display:block;width:27px;height:26px;background-image:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png);background-position:-200px -12px;background-repeat:no-repeat;-webkit-transition:top .1s ease-in}.hotlistItem:hover .hotlistHeadline,.hotlistItem:nth-child(1) .hotlistHeadline{bottom:9px;color:rgba(255,255,255,1.0);background-color:rgba(0,0,0,0.7);-webkit-transition:.1s ease-in}.hotlistItem:hover .hotlistHeadline:before,.hotlistItem:nth-child(1) .hotlistHeadline:before{top:-31px;background-position:-251px -12px;-webkit-transition:top .1s ease-in}.interruptFixRight:hover .hotlistItem:nth-child(1) .hotlistHeadline{bottom:-39px;color:rgba(255,255,255,0.0);background-color:rgba(0,0,0,0.0);-webkit-transition:.1s ease-in}.interruptFixRight:hover .hotlistItem:nth-child(1) .hotlistHeadline:before{top:-36px;background-position:-200px -12px;-webkit-transition:top .1s ease-in}.hotlistItem:nth-child(1):hover .hotlistHeadline{bottom:9px!important;color:rgba(255,255,255,1.0)!important;background-color:rgba(0,0,0,0.7)!important;-webkit-transition:.1s ease-in!important}.hotlistItem:nth-child(1):hover .hotlistHeadline:before{top:-31px!important;background-position:-251px -12px!important}.fixHeadline{font-weight:bold;font-size:22px;line-height:25px;letter-spacing:-1px}.fixDescription{margin-top:5px;font-size:13px;line-height:16px;color:#fff}.interruptFixBottom{margin-top:18px;padding-top:14px;border-top:1px solid #ccc}.bottomItem{position:relative;display:inline-block;margin-right:80px;font-family:Helvetica Neue,Arial,sans-serif;color:#039;font-size:12px;line-height:18px;font-weight:bold;text-decoration:none}.bottomItem:hover{text-decoration:underline}.bottomItem:nth-child(1){padding-left:22px}.bottomItem:nth-child(1):before{position:absolute;top:3px;left:0;content:'';display:block;width:16px;height:13px;background-image:url(http://media.ignimgs.com/media/ign/imgs/sprite-icon2.png);background-position:0 -540px;background-repeat:no-repeat}.bottomItem:nth-child(3){padding-left:26px;margin-right:0}.bottomItem:nth-child(3):before{position:absolute;top:0;left:0;content:'';display:block;width:20px;height:16px;background-image:url(/src/core/img/widgets/global/page/followus_tshirt_icon.png);background-repeat:no-repeat}.trendingwikis-widget{font-size:14px;background-color:#fff}.trendingwikis-row{min-height:75px;width:640px}.trendingwikis-readerCount{background-color:#c00;color:#fff;font-size:12px;line-height:18px;font-weight:bold;float:left;padding:12px;min-height:52px;width:125px;overflow:hidden;position:relative;display:block}.trendingwikis-readerCount span{display:block}.trendingwikis-row:nth-child(1) .trendingwikis-readerCount{box-shadow:inset 0 -4px 16px rgba(0,0,0,0.4);color:#fff}.trendingwikis-row:nth-child(2) .trendingwikis-readerCount{box-shadow:inset 0 -4px 14px rgba(0,0,0,0.27);color:#ffa49e}.trendingwikis-row:nth-child(3) .trendingwikis-readerCount{box-shadow:inset 0 -4px 12px rgba(0,0,0,0.15);color:#ea6f67}.trendingwikis-countContainer{float:left}.trendingwikis-count{font-size:24px;line-height:24px;text-align:center}.trendingwikis-boxArt{width:60px;display:block;position:absolute;top:12px;right:12px}.trendingwikis-pages{border-bottom:1px dashed #999;padding:12px 0 0 24px;float:left;min-height:62px;width:467px}.trendingwikis-pages.first{border-top:1px dashed #999}.trendingwikis-popularPage{margin-bottom:4px}.trendingwikis-popularPage a:link{font-weight:600;font-size:18px;line-height:21px;font-style:normal;font-family:"proxima nova",sans-serif}.trendingwikis-otherPages{text-overflow:ellipsis;width:100%;height:21px;white-space:nowrap;overflow:hidden}.trendingwikis-otherPages span{line-height:21px;font-size:14px}.trendingwikis-clear:after{clear:both;content:" ";display:block;font-size:0;height:0;line-height:0;visibility:hidden;width:0}
-/* 10:31:16 22/06/2012 [http://oystatic.ignimgs.com/src/core/css/widgets/slotted/interrupts/communityspotlight.css, http://oystatic.ignimgs.com/src/core/css/widgets/social/shared/followbutton.css]*/
-.ign-communitySpotlight{color:#3a3939;font-family:"helvetica neue",arial,sans-serif;font-size:14px;line-height:1.24}.ign-communitySpotlight a,.ign-communitySpotlight a:visited{color:#004d97;text-decoration:none}.ign-communitySpotlight a:hover{text-decoration:underline}.communitySpotlightHeader{background:url(http://media.ign.com/ign/stp/img/touchpoint-sprite.png) no-repeat 0 0;height:25px;width:198px}.spotlightData{border-top:1px solid #ccc;padding-top:12px}.spotlightData:after{clear:both;content:' ';display:block;font-size:0;line-height:0;visibility:hidden;width:0;height:0}.spotlightAvatarContainer{float:left}.spotlightAvatarContainer a{padding:6px;background-color:#fff;border:1px solid #000;display:block;box-shadow:4px 4px 0 #ccc;margin:0 12px 12px 0}.spotlightAvatarContainer a img{width:80px;position:relative;clip:rect(0px,80px,80px,0px)}ul.artData{margin:0 12px 0 106px;padding:0;list-style:none;border-bottom:1px dotted #999;min-height:96px}ul.artData li{margin:0;padding:0;padding-bottom:4px}.spotlightName{font-size:16px}.spotlightTagLine{line-height:18px;margin-right:12px;padding:8px 0 9px}.addToIGNControls{position:absolute}.on-top{z-index:9999}.addToIGNControls{display:none}li.addToIGNGameControls{border-bottom:solid 1px #ccc;padding:0 0 6px;overflow:hidden}.addToIGNContainer{position:relative;float:left;z-index:90;padding:0}.addToIGNContainer:hover{cursor:pointer}.addToIGN{height:25px;width:125px}.addToIGNControls{display:none;background-color:#fff;border:1px solid #999;clear:both;margin:0;padding:5px;width:160px}.addToIGNControls ul{display:block;width:100%;margin:0;padding:0;list-style-position:inside;list-style:inside}.addToIGNControls li{margin:3px;list-style-image:none;list-style-position:inside;list-style-type:none}.addToIGNControls .removeFromIGN{color:#039;cursor:pointer}.addToIGNControls .removeFromIGN:hover{text-decoration:underline}.removeFromIGN{background:url(/src/social/img/icons_sprite.png) no-repeat scroll 0 -1531px;height:15px;text-indent:20px;line-height:10px}.manageStuff{background:url(/src/social/img/icons_sprite.png) no-repeat scroll 0 -180px;height:15px;text-indent:20px;color:#039;cursor:pointer;margin:0 0 8px}.manageStuff a{font-size:100%;font-weight:normal}.manageStuff a,.manageStuff a:visited,.removeFromIGN{font-family:"helvetica neue",arial,sans-serif;font-size:12px;text-decoration:none;color:#039}.addToIGN{padding-right:10px}
-/* 9:56:04 06/06/2013 [http://oystatic.ignimgs.com/src/core/css/widgets/slotted/coverstories/evo.css, http://oystatic.ignimgs.com/src/core/css/widgets/global/page/lightbox.css]*/
-.clearfix{*zoom:1}.clearfix:before,.clearfix:after{display:table;content:""}.clearfix:after{clear:both}.evo-coverStories{display:inline;float:left;width:948px;overflow:hidden;position:relative}.evo-coverStories .fuseNav{width:100%}.evo-coverStories .fuseNav a{display:block;float:left;font-family:"proxima-nova","helvetica neue",arial,sans-serif;font-size:11px;font-weight:700;line-height:44px;text-transform:uppercase}.evo-coverStories .fuseNav a.active{color:#d3222a}.evo-coverStories .fuseNav a span{display:block}.evo-coverStories .fuseNav a .text{border-left:1px solid #CCC;height:44px;padding:5px 15px 0}.evo-coverStories .fuseNav a.first .text{border-left-width:0}.evo-coverStories .fuseNav .fuse{background-color:#CCC;height:5px;overflow:hidden}.evo-coverStories .fuseNav a .fuse .activeFuse{background-color:#d3222a;float:right;height:5px;width:0}.evo-coverStories .fuseNav a.previous .fuse{background-color:#333}.evo-coverStories .fuseNav a.active .fuse .activeFuse{float:left}.evo-coverStories .fuseNav a.selected .fuse{background-color:#d3222a}.evo-coverStories a{text-decoration:none;color:#000}.evo-coverStories .prime,.evo-coverStories .secondary{height:263px;border-top:1px solid #ccc;border-right:1px solid #ccc;position:relative;overflow:hidden;background-repeat:no-repeat}.evo-wrapper{margin-left:6px}.evo-coverStories .prime{display:inline;float:left;margin-right:5px;width:468px;height:263px}.evo-coverStories .prime .video-overlay{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -199px -12px;display:block;height:25px;left:10px;position:absolute;top:231px;width:27px}.evo-coverStories .prime .video-overlay:hover{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -250px -12px;display:block;height:25px;left:10px;position:absolute;top:231px;width:27px}.evo-coverStories a.prime:link,.evo-coverStories a.prime:visited{color:#e6e6e6}.evo-coverStories a.prime:hover,.evo-coverStories a.prime:active{color:#fff}.evo-coverStories .wide .video-overlay{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -7px -14px;display:block;height:64px;left:10px;position:absolute;top:183px;width:76px}.evo-coverStories .wide .video-overlay:hover{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -101px -14px;display:block;height:64px;left:10px;position:absolute;top:183px;width:76px}.evo-coverStories .secondary{display:inline;float:left;margin:0 6px 0 6px;padding-top:140px;width:227px;height:123px;font-size:18px;background-repeat:no-repeat;background-size:228px 128px}.evo-coverStories .secondary .video-overlay{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -200px -12px;display:block;height:25px;left:7px;position:absolute;top:95px;width:27px}.evo-coverStories .secondary .video-overlay:hover{background:url(/src/core/img/widgets/slotted/coverstories/carousel-sprite.png) no-repeat -251px -12px;display:block;height:25px;left:7px;position:absolute;top:95px;width:27px}.evo-coverStories a.secondary:link,.evo-coverStories a.secondary:visited{color:#000}.evo-coverStories a.secondary:hover,.evo-coverStories a.secondary:active{color:#039}.evo-coverStories .secondary.omega{margin-right:0;margin-left:6px}.evo-coverStories .overlayBackground,.evo-coverStories .overlayContent{position:absolute;left:0;bottom:0;width:250px;height:135px;display:inline;float:left;margin:0}.evo-coverStories .carousel{height:280px;margin:0;padding:0;position:relative;overflow:hidden;width:948px;transition:height .3s ease-out 0s;-moz-transition:height .3s ease-out 0s;-o-transition:height .3s ease-out 0s;-webkit-transition:height .3s ease-out 0s}.evo-coverStories .carousel .storyUnit{height:280px;list-style:none;position:absolute;top:-280px;transition:top .3s ease-out .3s;-moz-transition:top .3s ease-out .3s;-o-transition:top .3s ease-out .3s;-webkit-transition:top .3s ease-out .3s;width:948px;z-index:1}.evo-coverStories .carousel .storyUnit.active{top:0;transition-delay:0s;-moz-transition-delay:0s;-o-transition-delay:0s;-webkit-transition-delay:0s;z-index:2}.evo-coverStories .overlayBackground{background:#000;opacity:.75}.overlayContent span{display:block;margin:0}.lcs-headline,.lcs-headline a{font-family:"proxima-nova","helvetica neue",arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;line-height:25px}.cvr-headline{color:#fff}.lcs-teaser{color:#fff;font-family:"proxima-nova","helvetica neue",arial,sans-serif;font-size:13px;margin-top:5px}.cvr-highlightsSubTitle{color:#fff;font-family:"proxima-nova","helvetica neue",arial,sans-serif;font-size:11px;font-weight:700;margin-top:15px;text-transform:uppercase}.cvr-highlights{height:210px;padding:30px;position:absolute;right:0;top:0;width:248px;z-index:6;background:#000;background:rgba(0,0,0,0.75);overflow:hidden}.cvr-highlights a,.cvr-highlights{color:#fff;color:rgba(255,255,255,1)}.evo-coverStories-subitems{color:#d3222a}.evo-coverStories-subitems ul{list-style:none outside}.evo-coverStories-subitems li{margin:4px 0;list-style:none outside}.evo-coverStories-subitems a{clear:right;color:#ccc;color:rgba(204,204,204,1);color:#ccc;display:block;font-family:"proxima-nova","helvetica neue",arial,sans-serif;font-size:13px;left:3px;line-height:15px;margin-left:7px;position:relative}.evo-coverStories-subitems a:hover{color:#fff}.cvr-main{position:relative;height:270px}.overlayContent .lcs-headline{margin:6px 12px 6px 12px}.overlayContent .lcs-subheadline{margin:0 12px 0 12px}.evo-coverStories .readMoreArrow{color:#fff;text-decoration:none;text-indent:-9999px;position:absolute;left:0;bottom:0;height:18px;display:block;width:18px;background-image:url(/src/ignmedia/img/default/evolution-icons.png);background-position:0 -40px;background-repeat:no-repeat}.overlayContent .readMoreArrow{left:12px;bottom:6px}.evo-coverStories .wide li:before{clear:left;content:"\00BB";float:left;line-height:12px}.evo-coverStories .shareThis{float:right;margin-top:2px}.evo-coverStories .shareThis .at300b{width:100px}.evo-coverStories .shareThis .addthis_button_google_plusone{width:60px}.evo-coverStories .share-bar{background-color:#231f20;box-sizing:border-box;-moz-box-sizing:border-box;color:#fff;font-size:24px;font-weight:bold;height:80px;padding:28px 20px;width:640px}.evo-coverStories .bottom-bumper{background-color:#000;height:20px;position:absolute;right:-308px;top:256px;width:308px}.evo-coverStories .live-video-container{background-color:#000;display:block;height:440px;position:relative;top:0;width:640px;transition:top .3s ease-out 0s;-moz-transition:top .3s ease-out 0s;-o-transition:top .3s ease-out 0s;-webkit-transition:top .3s ease-out 0s}.evo-coverStories .live-video-container.hidden{top:-180px}.evo-coverStories .carousel.live-video{height:610px}.evo-coverStories .video-container{height:360px;width:640px}.evo-coverStories .cvr-main.live-video{background-color:#000}.coverStoriesShift{position:relative;transition:top .3s ease-out 0s;-moz-transition:top .3s ease-out 0s;-o-transition:top .3s ease-out 0s;-webkit-transition:top .3s ease-out 0s}.coverStoriesShift.move-up{top:-330px}.main-column-content{position:relative;transition:top .3s ease-out 0s;-moz-transition:top .3s ease-out 0s;-o-transition:top .3s ease-out 0s;-webkit-transition:top .3s ease-out 0s}.main-column-content.move-up{position:relative;top:-160px}.lightBox{background:#fff;position:absolute;z-index:5901;border:1px solid #d32028;border-bottom-width:12px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;max-width:90%}.lightBox.video{border:24px solid #fff;border-radius:4px}.lightBox.video .headline{border:0}.lightBox .content{padding:12px}.lightBox .content img{-moz-box-shadow:0 0 6px #ccc;-webkit-box-shadow:0 0 6px #ccc;box-shadow:0 0 6px #ccc;max-width:100%}.lightBox .credits{float:right;margin-top:11px;color:#888;font-size:16px;margin-bottom:12px}.lightBox .artist span{font-weight:bold}.lightBox .artName{font-size:30px}.lightBox.video .closeBttn{right:-30px;top:-39px}.lightBox.video object{z-index:1000}.closeBttn{position:absolute;top:-14px;right:-14px;height:28px;width:28px;background:transparent url(/src/ignmedia/img/cheats/lightbox_close.png) no-repeat left top}.lightBoxBG{position:fixed;top:0;left:0;z-index:5900;height:100%;width:100%;background:#333;filter:alpha(opacity=75);opacity:.75;cursor:pointer}.credits span{font-weight:bold}.lightBoxTopBar{height:12px;border-left:74px solid #d32028;background:#CCC}.lightBox .nowLoading{position:absolute;display:block;height:17px;width:300px;background:#fff url(/src/ignmedia/sites/www.ign.com/img/lists/loading.gif) repeat-x;z-index:5901}.byline{color:#888;white-space:nowrap;text-align:right}.lightBox.video .listElmnt-bgIcons.listElmnt-iconsComments{margin-bottom:12px;background-position:-9px -53px}.lightBox.video .listElmnt-bgIcons.listElmnt-iconsComments{margin-bottom:12px}.lightBox.video .listElmnt-tools{font-size:12px;font-weight:normal;margin-right:12px}.lightBox.video .listElmnt-bgIcons.listElmnt-iconsComments{margin-bottom:12px}
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+body.stress-test-css .pokéstatus {
+    border-radius: 7px;
+}
+body.stress-test-css .pokéfile {
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px #fff, 0 0 0 6px #FFF, 0 0 0 10px #bada55;
+}
+body.stress-test-css .right {
+    border-radius: 5px;
+    width: calc(100% - 200px);
+    box-shadow: 0 0 8px rgba(0,0,0,0.7);
+}
+body.stress-test-css tags {
+    border-radius: 3px;
+}
+
+row {
+    width: 100%;
+    position: absolute;
+}
+.stripe-odd {
+    background-color: #fff;
+}
+.stripe-even {
+    background-color: #eee;
+}
+.left {
+    float: left;
+    display: inline-block;
+}
+.pokéstatus {
+    float: left;
+    margin: 38px 3px;
+    padding: 7px 10px;
+    background-color: #bada55;
+    color: #FFF;
+    font-weight: bold;
+    text-align: right;
+    width: 50px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+.pokéfile {
+    width: 70px;
+    height: 70px;
+    margin: 16px;
+    margin-left: 0px;
+    background-color: lightgrey;
+}
+.right {
+    float: left;
+    display: inline-block;
+    border: 1px solid slategrey;
+    margin: 5px;
+    padding: 8px;
+    height: 95px;
+}
+h3 {
+    margin: 0;
+}
+p {
+    margin: 0;
+}
+rate {
+    position: absolute;
+    bottom: 11px;
+}
+rate:before {
+    content: 'heart rate: '
+}
+tags {
+    position: absolute;
+    bottom: 11px;
+    right: 21px;
+    background-color: lightgray;
+    padding: 0 5px;
+}
+rank {
+    position: absolute;
+    top: 7;
+    right: 23;
+    text-align: right;
+}
+
+
 </style>
 
 </head>
 
 <body>
-  
+<script class="listItem" type="text/underscore-template">
+<row class="stripe-<%= rank % 2 ? 'even' : 'odd' %>">
+    <div class="left">
+        <div class="pokéstatus"><%= pokestatus %></div>
+        <img class="pokéfile" src="<%= pokefile %>"></img>
+    </div>
+    <div class="right">
+        <h3><%= title %></h3>
+        <p><%= body %></p>
+        <rate><%= rate %></rate>
+        <tags><%= tags %></tags>
+        <rank class="group-<%= rank % 5 %>"><%= rank %></rank>
+    </div>
+</row>
+</script>
+
+
 </body>
 
 
 <script>
+var runStressTestEvents = document.body.className.indexOf('stress-test-events') > -1,
+runStressTestAutoscroll = document.body.className.indexOf('stress-test-autoscroll') > -1;
+window.stressTests = {
+    autoscroll: (function(autoscroll){
+        return function( stop )
+        {
+            if(stop) return clearInterval(autoscroll);
+        
+            autoscroll = setInterval(
+                function()
+                { 
+                    $('.iscroll')
+                        .animate(
+                            {scrollTop: '+='+((Math.random()*10000)+2000), duration:600} 
+                        ) 
+                }, 600);
+        };
+        }(0)),
+    events: (function(fire){
+        return function(stop)
+        {
+            if(stop) return clearInterval(fire);
+            
+            fire = setInterval(function(){
+                for (var i = pool._cursor[0]; i < pool._cursor[1]; i++)
+                {
+                    var rand = Math.random();
+                    if (0.25 < rand || rand > 0.75) continue;
+                    var model = pool.collection.at(i);
+                    model.set('rate', model.get('rate') + (rand < 0.5 ? -1 : 1));
+                }
+            }, 100);
+        };
+    }(0)),
+    css: function(stop){
+        if (stop) return document.body.className = '';
+        
+        document.body.className = 'stress-test-css';
+    }
+};
+
+
+
+
 var count = 10000;
 var Person = Backbone.Model.extend({
-    imgsrc: null,
-    title: null
+    pokestatus: null,
+    pokefile: null,
+    title: null,
+    body: null,
+    rate: null,
+    tags: null,
+    rank: null
 });
-console.time('h')
+
 var collection = new Backbone.Collection(), p;
 collection.length = count;
+console.time('create model');
 
 (function(collection, i, count){
     var replace = function(){
-        var end = i + 500;
+        var end = i + 10;
         for(; i < end; i++)
         {
             p = new Person();
-            p.set('imgsrc', 'http://placehold.it/300x300/bada55/ffffff&text=item%20'+i);
-            p.set('title', ['Lorem ipsum dolor sit amet, dictas splendide pertinacia te mel.',
+            p.set('pokestatus', 'ready');
+            p.set('pokefile', null);
+            p.set('pokefile', 'https://graph.facebook.com/'+Math.floor((Math.random()*100000)+10000)+'/picture?type=large');
+            p.set('title', ['Ben', 'Wes', 'George', 'Scott', 'Jake'][Math.floor(Math.random()*5)] + [' Jones', ' Smith', ' Ranger', ' Taki', ' Perce'][Math.floor(Math.random()*5)])
+            p.set('body', ['Lorem ipsum dolor sit amet, dictas splendide pertinacia te mel.',
             'Stet vivendo quaerendum id mei, per te cibo ignota ocurreret.',
             'Sed ut wisi disputando.',
             'Vix exerci omnesque laboramus in.',
             'Mazim soluta eripuit sit ut, cu mea primis comprehensam, has id dolore viderer.']
                 [Math.floor(Math.random()*4)]);
+            p.set('rate', Math.floor(Math.random()*60)+ 65);
+            p.set('tags', 'lap 1');
+            p.set('rank', i);
             collection.add(p, {at:i});
         }
         collection.length = count;
-        if (i >= count) clearInterval(int);
+        // console.log(i);
+        if (i >= count) 
+        {
+            clearInterval(int);
+            console.timeEnd('create model complete');
+        }
     };
-    var int = setInterval(replace, 10);
+    var int = setInterval(replace, 32);
+    replace();
+    replace();
+    replace();
     replace();
 }(collection, 0, count));
 
-console.timeEnd('h')
 
 var ListItem = Backbone.ReuseView.extend({
     modelMap: {
-        'imgsrc': ['img', 
-            function($cachedElement, value){
-                $cachedElement.attr('src', value);
+        'pokestatus': ['.pokéstatus', 
+            function setStatus($cachedElement, value){
+                $cachedElement[0].innerHTML = value;
             }
         ],
-        'title': ['.listElmnt-storyHeadline.title',
-            function($cachedElement, value){
-                $cachedElement.html( value );
-            }]
+        'pokefile': ['img.pokéfile',
+            function setProfile($cachedElement, value){
+                $cachedElement[0].src = value;
+            }
+        ],
+        'title': ['h3',
+            function setTitle($cachedElement, value){
+                $cachedElement[0].innerHTML = value;
+            }
+        ],
+        'body': ['p',
+            function setBody($cachedElement, value){
+                $cachedElement[0].innerHTML = value;
+            }
+        ],
+        'rate': ['rate',
+            function setRate($cachedElement, value){
+                $cachedElement[0].innerHTML = value;
+            }
+        ],
+        'tags': ['tags',
+            function setTags($cachedElement, value){
+                $cachedElement[0].innerHTML = value;
+            }
+        ],
+        'rank': ['rank',
+            function setRank($cachedElement, value){
+                this.$el[0].className = 'stripe-' + (value % 2 ? 'even': 'odd');
+                $cachedElement[0].className = 'group-' + (value % 5);
+                $cachedElement[0].innerHTML = value;
+            }
+        ],
     },
     standardHeight: 124,
     
-    partial: '<div class="listElmnt"><div class="listElmnt-thumb"><a class="listElmnt-storyHeadline thumb"><img src="{imgsrc}"/></a></div><div class="listElmnt-blogItem"><h3><a class="listElmnt-storyHeadline title" href="http://">{title}</a></h3><p><span class="listElmnt-date">25 minutes ago - </span>Lorem ipsum dolor sit amet, dictas splendide pertinacia te mel. Ius ceteros urbanitas eu, ea splendide definiebas sea. Vim ubique audiam in. Primis quidam in quo, ea vide nostrud quaeque est, ei scripta scriptorem mea. Forensibus appellantur an pro, vix detracto luptatum vivendum ea.</p><a class="listElmnt-bgIcons listElmnt-iconsComments listElmnt-tools" href="http://">Read More</a></div></div>',
+    partial: $('.listItem').text(),
     
     render: function(){
-        this.$el = $(_.template(this.partial)({model:this.model}));
+        this.$el = $(_.template(this.partial)(this.model.toJSON()));
     }
 });
 
 var Pool = Backbone.PoolContainerView.extend({
-    $container: '#scrollview',
-    $content: '#scroller',
     render: function( ) 
     {
         var scroll = $('<div class="iscroll">');
@@ -90,11 +280,13 @@ var Pool = Backbone.PoolContainerView.extend({
             border: '1px solid red'
         });
         
-        this.$el = scroll;
-        document.body.appendChild(this.$el[0]);
+        // this.$el = scroll;
+        // document.body.appendChild(this.$el[0]);
+        this.$el = $(document.body);
     },
     
-    estimateHeightAt: function(idx){
+    estimateHeightAt: function(idx)
+    {
         return 143;
     },
     
@@ -115,27 +307,12 @@ var Pool = Backbone.PoolContainerView.extend({
 
 
 var pool = new Pool({collection: collection});
-document.body.appendChild(pool.$el[0])
+// document.body.appendChild(pool.$el[0])
 
-autoscroll = setInterval(function(){ $('.iscroll').animate({scrollTop: '+='+((Math.random()*10000)+2000), duration:600} ) }, 600);
-clearInterval(autoscroll)
+// automation tests
+if (runStressTestEvents) stressTest.events();
+if (runStressTestAutoscroll) stressTests.autoScroll();
 
 </script>
-
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

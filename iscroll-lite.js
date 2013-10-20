@@ -48,11 +48,13 @@ var utils = (function () {
 	};
 
 	me.momentum = function (current, start, time, lowerMargin, wrapperSize) {
-		var distance = current - start,
-			speed = Math.abs(distance) / time,
+		var maxSpeed = 4,
+            distance = current - start,
+			speed = Math.min(Math.abs(distance) / time, maxSpeed),
 			destination,
 			duration,
-			deceleration = 0.0006;
+			deceleration = 0.0026; 
+            // console.log('speed:'+speed)
 
 		destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 );
 		duration = speed / deceleration;
