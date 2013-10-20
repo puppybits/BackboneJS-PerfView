@@ -9,7 +9,7 @@ var now = (function()
             performance.msNow     ||
             performance.oNow      ||
             performance.webkitNow).bind(window.performance);
-})();
+})().bind(window);
 
 var requestAnimationFrame = (function() {
   return window.requestAnimationFrame       ||
@@ -23,15 +23,19 @@ var requestAnimationFrame = (function() {
 })().bind(window);
     
 var config = {
-    batchAppendViews: false,
+    batchAppendViews: false, // TODO: settign to true breaks when scrolling up
+    staticHeights: false,
     fastScrollingRate: 30,
     scrollingSampleSize: 10,
-    destoryLag: 0.5,
+    destoryLag: 3.0,
     drawAhead: 3.0,
-    drawTrigger: 0.5
+    drawTrigger: 3.0
 },
 throttleFastCheck = 0,
-debug = {profile: false, fps: true},
+debug = {
+    profile: true, // allow auto-on when heavy loads are hit
+    fps: true // super light and informative inspection of scroll perfromance
+},
 reportFPS = function(t, delta)
 {
     // pref: shifting and adding causes leaking until GC
@@ -48,6 +52,11 @@ reportFPS = function(t, delta)
     fps = 1000 / (sum / len);
     console.log('%cfps:%c'+Math.min(60,fps.toFixed(2))+'  %cmax:%c'+max.toFixed(2)+'ms'+'  %cavg:%c'+mean.toFixed(2)+'ms '+delta, 
                 'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;');
+},
+
+lastRun = function(t)
+{
+    return t[t.length-1] - t[t.length-2];
 },
 _timings = [],
 
@@ -91,6 +100,7 @@ fastScrollingOptimization = function(view, speed)
 {
     var avgSpeed = 0, len, i, prop, reuseView;
     // pref: storing and shifting builds up 500k before it's GC'd
+    // TODO: change from shift/push to reusing indexies in the array
     if (view._speed.length > config.scrollingSampleSize) view._speed.shift();
     
     view._speed.push(speed);
@@ -235,9 +245,9 @@ appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max)
     idx,
     next,
     shouldPaint,
-    height = (config.batchAppendViews ? 
-        function(){ return reuseView.height() } :
-        function(){ return view.estimateHeightAt(idx) });
+    height = (config.batchAppendViews || config.staticHeights ? 
+        function heightGuess(){ return view.estimateHeightAt(idx) } :
+        function heightCalculate(){ return reuseView.height() });
     
     if(isDown)
     {
@@ -254,7 +264,7 @@ appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max)
         next = -1;
         shouldPaint = function()
         { 
-            return (cachedY[cursor[0]] > provisionLimit && cursor[0] >= 0); 
+            return (cachedY[cursor[0]] > provisionLimit && cursor[0] > -1); 
         }
     }
     
@@ -305,7 +315,7 @@ var poollen,
 view, $container, $items, isScrollingDown, shouldRedraw, scrollY, scrollHeight, 
 reuseView, item, items, isDisposable, provisioningThreshold, cursor, range, top,
 provisionLimit, disposeLimit, scrollBottom, contentHeight, prop, idx, cachedY,
-lastHeight, speed, shouldResetCursorEnd, isScrollingFast, i,j,y,len, fps;
+lastHeight, speed, shouldResetCursorEnd, isScrollingFast, i,j,y,len, fps, last;
 
 
 
@@ -317,7 +327,7 @@ var update = function(delta)
     if (delta)
     {
         // pref: adding and popping to array causes leak until GC'd
-        // todo: look into using static length typed array
+        // todo: switch to static length typed array
         _timings.push(delta);
         reportFPS(_timings, delta);
         fps = delta;
@@ -356,8 +366,6 @@ var update = function(delta)
         // get the limit to dispose and provisioning limit
         if (!isScrollingDown)
         {
-            console.log('up')
-            // check the saved cursorY position against the provisioningThreshold
             disposeLimit = scrollBottom + (scrollHeight * config.destoryLag);
             provisionLimit = scrollY - (scrollHeight * config.drawAhead);
             provisioningThreshold = scrollBottom - (scrollHeight * config.drawTrigger);
@@ -365,9 +373,11 @@ var update = function(delta)
             shouldRedraw = (cachedY[cursor[0]] > provisioningThreshold);
             if (!shouldRedraw) continue;
             
-            if (debug.profile) console.profile('run-' + (fps || 0));
+            last = lastRun(_timings);
             
-            if (config.batchAppendViews) frag.appendChild($content);
+            if (debug.profile && last > 100) console.profile('run-' + (fps || 0));
+            
+            if (config.batchAppendViews) frag.appendChild($content[0]);
             
             // if passes then enqueViews
             dequeueViews(view, cachedY, cursor, disposeLimit, false);
@@ -385,7 +395,7 @@ var update = function(delta)
             // validate the height/position of the container
             updateCursor($content, cachedY, view.collection.length, iscroll);
             
-            if (debug.profile) console.profileEnd('run-' + (fps || 0));
+            if (debug.profile && last > 100) console.profileEnd('run-' + (fps || 0));
             
             if (config.batchAppendViews) $container.appendChild($content);
             
@@ -409,14 +419,15 @@ var update = function(delta)
         shouldRedraw = (cachedY[cursor[1]] < provisioningThreshold);
         if (!shouldRedraw) continue;
         
+        last = lastRun(_timings);
         
-        if (debug.profile) console.profile('run-' + (fps || 0));
+        if (debug.profile && last > 100) console.profile('run-' + (fps || 0));
         
         
         // NOTE: Had a document fragment here but it hurts performance. 
         // Removing from the DOM forces the GPU tiles to clear and 
         // redraw the texture from scratch on each update call.
-        if (config.batchAppendViews) frag.appendChild($content);
+        if (config.batchAppendViews) frag.appendChild($content[0]);
         
         // remove unsed items
         dequeueViews(view, cachedY, cursor, disposeLimit, true);
@@ -439,9 +450,9 @@ var update = function(delta)
         //     '\npooled:'+view._pool['li'].length+
         //     '\ndequeued:'+view._dequeued['li'].length);
         
-        if (config.batchAppendViews) $container.appendChild($content);
+        if (config.batchAppendViews) $container[0].appendChild($content[0]);
         
-        if (debug.profile) console.profileEnd('run-'+fps);
+        if (debug.profile && last > 100) console.profileEnd('run-'+fps);
     }
     
     // done update all the pools
