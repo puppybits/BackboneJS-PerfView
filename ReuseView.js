@@ -17,15 +17,20 @@ var ReuseView = Backbone.ReuseView = function(opts)
     Backbone.View.prototype.constructor.apply(this, opts);
     
     this.model = opts.model || null;
+    this.forceGPUTexture = opts.forceGPUTexture || false;
     
     this.render();
     
-    this.$el.css('position', 'absolute');
-    this.$el.css('webkitTransform', 'translateZ(0)');
+    this.height = (this.height ? this.height : _.bind(this.$el.height, this.$el));
+    
+    this.$el.css( (!this.forceGPUTexture ? 
+                {position: 'absolute'} :
+                {webkitTransform: 'translate3d(0,0,0)'} ));
     
     // console.log('alloced: '+this.$el.find('.first').html())
     
     // cache DOM elements that need data updates
+    this._$cached = {};
     for(var name in this.modelMap)
     {
         var selector = this.modelMap[name][0];
@@ -45,77 +50,77 @@ _.extend(ReuseView.prototype, {
     _$imgs: null,
     _$cached: {},
     _idx: null,
-    _top: null,
-    _saveMemoryMode: true,
-    standardHeight: 1,
+    _saveMemoryMode: false,
+    height: null, // replace this with a function that returns a static height for faster performance
+    forceGPUTexture: false,
     
     _repurpose: function(model)
     {
         // dealloc the old model
-        if (this.model)
+        if (model && this.model)
         {
             for (name in this.modelMap)
             {
                 this.model.off('change:'+name);
             }
+            
+            this.model = model;
         }
         
-        this.model = model;
-        
-        // register for events on model changes
-        if (!this._freezeAllocations)
+        var sel, el, val, fnc;
+        for(name in this.modelMap)
         {
-            for (name in this.modelMap)
+            sel = this.modelMap[name][0];
+            if (this._saveMemoryMode && isImg.exec(sel)) continue;
+            
+            // register for new events if not saving memory
+            if (!this._saveMemoryMode)
             {
-                this.model.on('change:'+name, this.updateModel);
+                this.model.on('change:'+name, _.bind(this._modelChanged, this));
             }
+            
+            // update the DOM
+            el = this._$cached[name];
+            val = this.model.get(name);
+            fnc = this.modelMap[name][1];
+            
+            fnc.call(this, el, val)
         }
     },
     
-    // render ->  _.template(this.partial).compiled(model)
-    // note: all the html needs to be rendered
-        
+    // pool view triggers repaint when there is a new model and position    
     repaint: function( idx, position, backboneModel ) 
     {
         // set the position as absolute
-        var pos = {
-            // 'top' : position
-            'webkitTransform': 'translateY('+position+'px)'
-        }, i, len, name;
+        var pos = (!this.forceGPUTexture ? 
+            {'top': position} :
+            {'webkitTransform': 'translate3d(0, '+position+'px, 0)'}), 
+        i, len, name;
         
         // update the position
         this.$el.css( pos );
         
+        // update the model and the dom
         clearImgs(this._$imgs);
-        
         this._repurpose(backboneModel);
-        
-        // update the DOM with the new model
-        for(name in this.modelMap)
-        {
-            var sel = this.modelMap[name][0];
-            if (!this._freezeAllocations && isImg.exec(sel)) continue;
-            
-            var el = this.$el.find(sel);
-            var val = this.model.get(name);
-            var fnc = this.modelMap[name][1];
-            
-            fnc.call(this, el, val)
-        }
         
         // allow the reflow/repaints to happend
     },
     
-    _evtModel: function(evt)
+    staticHeight: function()
     {
-        new Throw('TODO: get model name from event');
-        this.updateModel(this.model, name);
+        // override if poolView is set to staticHeights option
+    },
+    
+    _modelChanged: function(evt)
+    {
+        this._updateModel(this.model, Object.keys(evt.changed)[0]);
     },
     
     _updateModel: function(model, name)
     {
-        var fnc = this.modelMap[name];
-        fnc(this.$el.find(name), model.get(name));
+        var fnc = this.modelMap[name][1];
+        fnc(this._$cached[name], model.get(name));
     },
     
     _freezeAllocations: function(shouldDelay)
@@ -124,22 +129,10 @@ _.extend(ReuseView.prototype, {
         
         this._saveMemoryMode = shouldDelay;
         
-        if (!shouldDelay)
-            return clearImgs(this._$imgs);
+        if (!shouldDelay) return clearImgs(this._$imgs);
         
-        for(name in this.modelMap)
-        {
-            this.model.on('change:'+name, this.updateModel);
-            
-            var sel = this.modelMap[name][0];
-            if (!isImg.exec(sel)) continue;
-            
-            var el = this.$el.find(sel);
-            var val = this.model.get(name);
-            var fnc = this.modelMap[name][1];
-            
-            fnc.call(this, el, val)
-        }
+        // else when turning back on then draw images and listen for model events
+        this._repurpose();
     }
 });
 
