@@ -6,7 +6,7 @@
 <script src="underscore-min.js" ></script>
 <script src="backbone-min.js"></script>
 
-<script src="PoolContainerView.js"></script>
+<script src="PerfView.js"></script>
 <script src="ReuseView.js"></script>
 <style>
 html, body {
@@ -125,7 +125,8 @@ rank {
 
 
 <script>
-var runStressTestEvents = document.body.className.indexOf('stress-test-events') > -1,
+var isIOS = (document.documentElement.style.webkitOverflowScrolling !== undefined ? true : false),
+runStressTestEvents = document.body.className.indexOf('stress-test-events') > -1,
 runStressTestAutoscroll = document.body.className.indexOf('stress-test-autoscroll') > -1;
 window.stressTests = {
     autoscroll: (function(autoscroll){
@@ -279,7 +280,7 @@ var ListItem = Backbone.ReuseView.extend({
     }
 });
 
-var Pool = Backbone.PoolContainerView.extend({
+var Pool = Backbone.PerfView.extend({
     render: function( ) 
     {
         var scroll = $('<div class="iscroll">');
@@ -289,9 +290,15 @@ var Pool = Backbone.PoolContainerView.extend({
             border: '1px solid red'
         });
         
-        // this.$el = scroll;
-        // document.body.appendChild(this.$el[0]);
-        this.$el = $(document.body);
+        if (isIOS) 
+        {
+            // this.$el = scroll;
+            // document.body.appendChild(this.$el[0]);
+        }
+        else
+        {
+            this.$el = $(document.body);
+        }
     },
     
     estimateHeightAt: function(idx)
@@ -316,7 +323,12 @@ var Pool = Backbone.PoolContainerView.extend({
 
 
 var pool = new Pool({collection: collection});
-// document.body.appendChild(pool.$el[0])
+
+if (isIOS) 
+{
+    // document.body.appendChild(pool.$el[0]);
+}
+
 
 // automation tests
 if (runStressTestEvents) stressTest.events();

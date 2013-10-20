@@ -465,7 +465,7 @@ var update = function(delta)
 // This view will be the container for the reuse views. It will
 // control reflow to happen inside this view. New or dirty objects
 // will be stored in a pool to reuse. 
-var PoolView = Backbone.PoolContainerView = function(opts) 
+var PerfView = Backbone.PerfView = function(opts) 
 {
     // call backbone constructor
     Backbone.View.prototype.constructor.apply(this, opts);
@@ -506,7 +506,7 @@ var PoolView = Backbone.PoolContainerView = function(opts)
     living.add += 1;
 }
 
-_.extend(Backbone.PoolContainerView.prototype, {
+_.extend(Backbone.PerfView.prototype, {
     collection: null, // need to have the collection on creation
     
     _$container: null,
@@ -548,8 +548,8 @@ _.extend(Backbone.PoolContainerView.prototype, {
     }
 });
 
-_.extend(Backbone.PoolContainerView.prototype, Backbone.View.prototype);
-Backbone.PoolContainerView.extend = Backbone.View.extend;
+_.extend(Backbone.PerfView.prototype, Backbone.View.prototype);
+Backbone.PerfView.extend = Backbone.View.extend;
 
 
 }())
