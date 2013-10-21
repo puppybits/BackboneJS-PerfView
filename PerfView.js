@@ -24,7 +24,7 @@ var requestAnimationFrame = (function() {
     
 var config = {
     batchAppendViews: false, // TODO: settign to true breaks when scrolling up
-    staticHeights: false,
+    staticHeights: true,
     fastScrollingRate: 30,
     scrollingSampleSize: 10,
     destoryLag: 3.0,
