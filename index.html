@@ -5,6 +5,7 @@
 <script src="jquery.min.js"></script>
 <script src="underscore-min.js" ></script>
 <script src="backbone-min.js"></script>
+<script src="iscroll-lite.js"></script>
 
 <script src="PerfView.js"></script>
 <script src="ReuseView.js"></script>
@@ -292,8 +293,8 @@ var Pool = Backbone.PerfView.extend({
         
         if (isIOS) 
         {
-            // this.$el = scroll;
-            // document.body.appendChild(this.$el[0]);
+            this.$el = scroll;
+            document.body.appendChild(this.$el[0]);
         }
         else
         {
@@ -326,7 +327,7 @@ var pool = new Pool({collection: collection});
 
 if (isIOS) 
 {
-    // document.body.appendChild(pool.$el[0]);
+    document.body.appendChild(pool.$el[0]);
 }
 
 

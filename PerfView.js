@@ -36,7 +36,7 @@ debug = {
     profile: false, // allow auto-on when heavy loads are hit
     fps: true // super light and informative inspection of scroll perfromance
 },
-reportFPS = function(t, delta)
+reportFPS = function(t, delta, lastY)
 {
     // pref: shifting and adding causes leaking until GC
     if (t[t.length-1] - t[0] < 1000) return;
@@ -50,8 +50,8 @@ reportFPS = function(t, delta)
     }
     t.shift();
     fps = 1000 / (sum / len);
-    console.log('%cfps:%c'+Math.min(60,fps.toFixed(2))+'  %cmax:%c'+max.toFixed(2)+'ms'+'  %cavg:%c'+mean.toFixed(2)+'ms '+delta, 
-                'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;');
+    console.log('%cfps:%c'+Math.min(60,fps.toFixed(2))+'  %cmax:%c'+max.toFixed(2)+'ms'+'  %cavg:%c'+mean.toFixed(2)+'ms '+'  %cy:%c'+lastY.toFixed(0)+' '+delta, 
+                'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;');
 },
 
 lastRun = function(t)
@@ -329,7 +329,7 @@ var update = function(delta)
         // pref: adding and popping to array causes leak until GC'd
         // todo: switch to static length typed array
         _timings.push(delta);
-        reportFPS(_timings, delta);
+        reportFPS(_timings, delta, lastScrollY);
         fps = delta;
     }
     
