@@ -36,29 +36,64 @@ debug = {
     profile: false, // allow auto-on when heavy loads are hit
     fps: true // super light and informative inspection of scroll perfromance
 },
-reportFPS = function(t, delta, lastY)
-{
-    // pref: shifting and adding causes leaking until GC
-    if (t[t.length-1] - t[0] < 1000) return;
-    var sum = 0, max = 0, mean, len, fps;
-    sum = t[t.length-1] - t[0];
-    mean = sum / t.length;
-    len = t.length;
-    while (t.length > 1)
-    {
-        max = Math.max(t[1] - t.shift(), max);
-    }
-    t.shift();
-    fps = 1000 / (sum / len);
-    console.log('%cfps:%c'+Math.min(60,fps.toFixed(2))+'  %cmax:%c'+max.toFixed(2)+'ms'+'  %cavg:%c'+mean.toFixed(2)+'ms '+'  %cy:%c'+lastY.toFixed(0)+' '+delta, 
-                'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;', 'color: black;', 'color: red;');
-},
-
-lastRun = function(t)
-{
-    return t[t.length-1] - t[t.length-2];
-},
 _timings = [],
+trackFPS = (function(t)
+{
+    if (window.ArrayBuffer && window.Float64Array)
+    {
+        // NOTE: Chrome hits a max of 124 requestAnimationFrames per second
+        t = new Float64Array(new ArrayBuffer(160*8)); 
+    }
+    else
+    {
+        for(var i=160; i >= 0; i--)
+        {
+            t.push(0);
+        }
+    }
+    t[0] = 1;
+    
+    var cur = 0, sum = 0, max = 0, thousand = 1000, sixty = 60, mean, fps, last;
+    return function(delta, lastY)
+    {
+        cur = t[0];
+        t[cur] = delta;
+        
+        // pref: adding and popping to array causes leak until GC'd
+        last = cur-1;
+        sum = t[last] - t[1];
+        t[0] = cur = cur + 1;
+        
+        if (sum < thousand) return;
+        
+        mean = sum / cur;
+        fps = thousand / (sum / cur);
+        
+        max = 0;
+        while (cur > 2)
+        {
+            last = cur-1;
+            max = Math.max(t[cur] - t[last], max);
+            cur = cur - 1;
+        }
+        t[0] = 1;
+        
+        console.log('%cfps:%c'+Math.min(sixty,fps.toFixed(2))+
+            '  %cmax:%c'+max.toFixed(2)+'ms'+
+            '  %cavg:%c'+mean.toFixed(2)+'ms '+
+            '  %cy:%c'+lastY.toFixed(0)+' '+
+            delta, 
+            'color: black;', 'color: red;', 
+            'color: black;', 'color: red;', 
+            'color: black;', 'color: red;', 
+            'color: black;', 'color: red;');
+    }
+}(_timings)),
+
+lastRun = function()
+{
+    return _timings[_timings[0]-1] - _timings[_timings[0]-2];
+},
 
 iscroll = null,
 isIOS = (document.documentElement.style.webkitOverflowScrolling !== undefined ? true : false),
@@ -76,6 +111,7 @@ living = (function(total)
         }
     };
 }(0));
+
 
 var poolviews = [],
 frag = document.createDocumentFragment(),
@@ -326,10 +362,7 @@ var update = function(delta)
     // console.timeStamp('go:'+delta);
     if (delta)
     {
-        // pref: adding and popping to array causes leak until GC'd
-        // todo: switch to static length typed array
-        _timings.push(delta);
-        reportFPS(_timings, delta, lastScrollY);
+        trackFPS(delta, lastScrollY);
         fps = delta;
     }
     
@@ -419,7 +452,7 @@ var update = function(delta)
         shouldRedraw = (cachedY[cursor[1]] < provisioningThreshold);
         if (!shouldRedraw) continue;
         
-        last = lastRun(_timings);
+        last = lastRun();
         
         if (debug.profile && last > 100) console.profile('run-' + (fps || 0));
         
