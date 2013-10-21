@@ -29,7 +29,7 @@ var config = {
     scrollingSampleSize: 10,
     destoryLag: 3.0,
     drawAhead: 3.0,
-    drawTrigger: 3.0
+    drawTrigger: 1.0
 },
 throttleFastCheck = 0,
 debug = {
@@ -414,7 +414,7 @@ var update = function(delta)
         // redraw as few times as possible and in groups of elements
         disposeLimit = scrollY - (scrollHeight * config.destoryLag);
         provisionLimit = Math.min(scrollBottom + (scrollHeight * config.drawAhead), contentHeight);
-        provisioningThreshold = Math.min(scrollBottom + (scrollHeight * config.drawTrigger), contentHeight);
+        provisioningThreshold = scrollBottom + (scrollHeight * config.drawTrigger);
         
         shouldRedraw = (cachedY[cursor[1]] < provisioningThreshold);
         if (!shouldRedraw) continue;
