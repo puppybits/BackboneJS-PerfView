@@ -104,7 +104,7 @@ rank {
 
 </head>
 
-<body>
+<body class="stress-test-css stress-test-events">
 <script class="listItem" type="text/underscore-template">
 <row class="stripe-<%= rank % 2 ? 'even' : 'odd' %>">
     <div class="left">
@@ -197,7 +197,7 @@ console.time('create model');
 
 (function(collection, i, count){
     var replace = function(){
-        var end = i + 10;
+        var end = i + 100;
         for(; i < end; i++)
         {
             p = new Person();
@@ -242,7 +242,7 @@ var ListItem = Backbone.ReuseView.extend({
         ],
         'pokefile': ['img.pokéfile',
             function setProfile($cachedElement, value){
-                // $cachedElement[0].src = value;
+                $cachedElement[0].src = value;
             }
         ],
         'title': ['h3',
@@ -332,7 +332,7 @@ if (isIOS)
 
 
 // automation tests
-if (runStressTestEvents) stressTest.events();
+if (runStressTestEvents) stressTests.events();
 if (runStressTestAutoscroll) stressTests.autoScroll();
 
 </script>

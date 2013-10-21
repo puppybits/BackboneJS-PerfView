@@ -78,7 +78,7 @@ trackFPS = (function(t)
         }
         t[0] = 1;
         
-        console.log('%cfps:%c'+Math.min(sixty,fps.toFixed(2))+
+        console.log('%cfps:%c'+fps.toFixed(2)+
             '  %cmax:%c'+max.toFixed(2)+'ms'+
             '  %cavg:%c'+mean.toFixed(2)+'ms '+
             '  %cy:%c'+lastY.toFixed(0)+' '+
@@ -484,6 +484,8 @@ var update = function(delta)
         //     '\ndequeued:'+view._dequeued['li'].length);
         
         if (config.batchAppendViews) $container[0].appendChild($content[0]);
+        
+        // console.log('reuseView count: '+view._pool['li'].length);
         
         if (debug.profile && last > 100) console.profileEnd('run-'+fps);
     }
