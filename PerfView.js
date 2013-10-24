@@ -147,37 +147,14 @@ fastScrollingOptimization = function(view, speed)
     }
     avgSpeed = avgSpeed / len;
     
-    if (!view._isScrollingFast)
+    if (!view._freezeAllocations)
     {
         if (avgSpeed < config.fastScrollingRate) return;
         
         console.log('fastscrolling: on '+avgSpeed);
         // save texture memory to prevent crashes on iOS
-        view._isScrollingFast = true;
+        view._freezeAllocations = true;
         
-        for (prop in view._pool)
-        {
-            len = view._pool[prop].length-1;
-            for (j=len; j > -1; j--)
-            {
-                reuseView = view._pool[prop][j];
-                reuseView._freezeAllocations(false);
-            }
-            len = view._dequeued[prop].length-1;
-            for (j=len; j > -1; j--)
-            {
-                reuseView = view._dequeued[prop][j];
-                reuseView._freezeAllocations(false);
-            }
-        }
-        return;
-    }
-    
-    if (view._isScrollingFast)
-    {
-        if (avgSpeed > 0) return;
-        
-        console.log('fastscrolling: off '+avgSpeed);
         for (prop in view._pool)
         {
             len = view._pool[prop].length-1;
@@ -190,10 +167,33 @@ fastScrollingOptimization = function(view, speed)
             for (j=len; j > -1; j--)
             {
                 reuseView = view._dequeued[prop][j];
-                reuseView._saveMemoryMode = true;
+                reuseView._freezeAllocations(true);
             }
         }
-        view._isScrollingFast = false;         
+        return;
+    }
+    
+    if (view._freezeAllocations)
+    {
+        if (avgSpeed > 0) return;
+        
+        console.log('fastscrolling: off '+avgSpeed);
+        for (prop in view._pool)
+        {
+            len = view._pool[prop].length-1;
+            for (j=len; j > -1; j--)
+            {
+                reuseView = view._pool[prop][j];
+                reuseView._freezeAllocations(false);
+            }
+            len = view._dequeued[prop].length-1;
+            for (j=len; j > -1; j--)
+            {
+                reuseView = view._dequeued[prop][j];
+                reuseView._saveMemoryMode = false; // bypass rendering dequed view
+            }
+        }
+        view._freezeAllocations = false;         
     }
 },
 
@@ -552,6 +552,7 @@ _.extend(Backbone.PerfView.prototype, {
     _cursor: [0,0],
     _positionCache: [0], // make sure all CSS is loaded before creating the view
     _speed: [],
+    _freezeAllocations: false,
     _staticHeights: false,
     
     dequeueView: function( id, reuseSubclass, opts ) 
@@ -564,12 +565,14 @@ _.extend(Backbone.PerfView.prototype, {
         {
             dequeue.model = opts.model;
             this._pool[id].push(dequeue);
+            dequeue._freezeAllocations(this._freezeAllocations);
             return dequeue; // instance already in heap
         }
         
         // create new DOM/JS in heap and return
         var alloced = new reuseSubclass( _.extend({staticHieght:this._staticHeights}, opts) );
         alloced._reuseId = id;
+        alloced._freezeAllocations(this._freezeAllocations);
         
         this._pool[id].push(alloced);
         return alloced;
