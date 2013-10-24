@@ -1,18 +1,18 @@
-# Native-level performance on massively long HTML scroll lists.
+### Native-level performance on massively long HTML scroll lists.
 
-## Stats
+#### Stats
 
-Chrome/Safari 120 FPS scrolling @ 10,000+ pixels per second
-Mobile Safari(iPad mini) 45 FPS scrolling @ 10,000+ pixel per second
+Chrome/Safari 120 FPS scrolling @ 10,000+ pixels per second with real-world CSS/images  
+Mobile Safari(iPad mini) 45 FPS scrolling @ 10,000+ pixel per second with real-world CSS/images  
 
-## Workbench Performance Tuning Options
+#### Workbench Performance Tuning Options
 
-## Getting Started 
+#### Getting Started 
 
-## Tips for speedy rendering
+#### Tips for speedy rendering
 
-## Troubleshooting Slowness
+#### Troubleshooting Slowness
 
-## License
+#### License
 
 MIT
