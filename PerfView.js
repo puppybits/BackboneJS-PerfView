@@ -1,5 +1,5 @@
 (function(){
-
+var isIE = (navigator.appVersion.indexOf('Trident') ? true : false);
 var now = (function() 
 {
     if (!window.performance)
@@ -39,6 +39,29 @@ debug = {
 _timings = [],
 trackFPS = (function(t)
 {
+    var log = ( !isIE ? 
+        function(fps, max, mean, lastY, delta)
+        {
+            console.log('%cfps:%c'+fps.toFixed(2)+
+                '  %cmax:%c'+max.toFixed(2)+'ms'+
+                '  %cavg:%c'+mean.toFixed(2)+'ms '+
+                '  %cy:%c'+lastY.toFixed(0)+' '+
+                delta, 
+                'color: black;', 'color: red;', 
+                'color: black;', 'color: red;', 
+                'color: black;', 'color: red;', 
+                'color: black;', 'color: red;');
+        }
+    :
+        function(fps, max, mean, lastY, delta)
+        {
+            console.log('fps:'+fps.toFixed(2)+
+                '  max:'+max.toFixed(2)+'ms'+
+                '  avg:'+mean.toFixed(2)+'ms '+
+                '  y:'+lastY.toFixed(0)+' '+
+                delta);
+        }
+    );
     if (window.ArrayBuffer && window.Float64Array)
     {
         // NOTE: Chrome hits a max of 124 requestAnimationFrames per second
@@ -78,15 +101,7 @@ trackFPS = (function(t)
         }
         t[0] = 1;
         
-        console.log('%cfps:%c'+fps.toFixed(2)+
-            '  %cmax:%c'+max.toFixed(2)+'ms'+
-            '  %cavg:%c'+mean.toFixed(2)+'ms '+
-            '  %cy:%c'+lastY.toFixed(0)+' '+
-            delta, 
-            'color: black;', 'color: red;', 
-            'color: black;', 'color: red;', 
-            'color: black;', 'color: red;', 
-            'color: black;', 'color: red;');
+        log(fps, max, mean, lastY, delta);
     }
 }(_timings)),
 
@@ -123,9 +138,9 @@ scrollTop = function($container, $content)
     if ($container[0].scrollTop !== 0)
         return $container[0].scrollTop;
         
-    t = $content.css('webkitTransform') || $content.css('msTransform')
-    t = t.slice(t.lastIndexOf(',')+2, t.length-1);
-    t = Math.abs(Number(t));
+    t = $content.css('transform') || $content.css('webkitTransform') || $content.css('msTransform')
+    t = (t === 'none' ?  0 :  Math.abs(Number(t.slice(t.lastIndexOf(',')+2, t.length-1))));
+    
     if (t === 0)
         t = document.body.scrollTop;
         
