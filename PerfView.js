@@ -64,12 +64,12 @@ trackFPS = (function(t)
     );
     if (window.ArrayBuffer && window.Float64Array)
     {
-        // NOTE: Chrome hits a max of 124 requestAnimationFrames per second
-        t = new Float64Array(new ArrayBuffer(160*8)); 
+        // NOTE: Chrome hits a max of 63 requestAnimationFrames per second
+        t = new Float64Array(new ArrayBuffer(110*8)); 
     }
     else
     {
-        for(var i=160; i >= 0; i--)
+        for(var i=110; i >= 0; i--)
         {
             t.push(0);
         }
@@ -335,8 +335,10 @@ appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max)
         
         cursor[idx] += next;
         
-        cachedY[cursor[idx]] = cachedY[cursor[idx]-1] + height();
+        cachedY[cursor[idx]] = (cachedY[cursor[idx]-1] + height()) || 0; // hack fix for NaN
     }
+
+    if (cursor[idx] < 0) cursor[idx] = 0;
 },
 
 updateCursor = function($content, cachedY, max, iscroll)
@@ -549,8 +551,6 @@ var PerfView = Backbone.PerfView = function(opts)
         this._$container.css({height: '100%'});
     else
         this._$container.css({overflowY: 'scroll', overflowX:'hidden'});
-    
-    update();
     
     // register for requestAnimationFrame to sync/trigger repaints
     living.add += 1;
