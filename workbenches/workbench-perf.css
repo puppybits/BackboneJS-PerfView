@@ -75,7 +75,7 @@ rate {
     bottom: 11px;
 }
 rate:before {
-    content: 'heart rate: '
+    content: 'rate: '
 }
 tags {
     position: absolute;

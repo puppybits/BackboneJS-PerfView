@@ -105,8 +105,10 @@ window.stressTests = {
     totally a hack but it's needed for the size load this takes.
  */
 
-var count = 10000;         // can ramp up to a million on Chrome
-var maxPerLazyLoad = 100;  // 100 is a good level for mobile devices.
+var count = 10000,           // can ramp up to a million on Chrome
+maxPerLazyLoad = 100,        // 100 is a good level for mobile devices.
+modelCreationSleepTime = 32; // use a basic inteval to lazy create models, this is so it doesn't hang when you try to load a million models
+
 var Person = Backbone.Model.extend({
     pokestatus: null,
     pokefile: null,
@@ -124,11 +126,11 @@ window.console.time = window.console.time || function(){};
 window.console.timeEnd = window.console.timeEnd || function(){};
 
 
-console.time('create model');
+console.time('Created '+count+' Models');
 
-(function(collection, i, count){
+(function lazyLoadB(collection, i, total, perInterval, delay){
     var replace = function(){
-        var end = i + maxPerLazyLoad;
+        var end = i + perInterval;
         for(; i < end; i++)
         {
             p = new Person();
@@ -147,25 +149,26 @@ console.time('create model');
             p.set('rank', i);
             collection.add(p, {at:i});
         }
-        collection.length = count;
+        collection.length = total;
         // console.log(i);
-        if (i >= count) 
+        if (i >= total) 
         {
             clearInterval(int);
-            console.timeEnd('create model complete');
+            console.timeEnd('Created '+total+' Models');
         }
     };
-    var int = setInterval(replace, 32);
+    var int = setInterval(replace, delay);
+    
+    // prime the models a bit more on the first run
     replace();
     replace();
     replace();
     replace();
-}(collection, 0, count));
+    
+}(collection, 0, count, maxPerLazyLoad, modelCreationSleepTime));
 
 
 var ListItem = Backbone.ReuseView.extend({
-    // 
-    
     /*
         NOTE: performance tip. If you name the anonymous functions it
         will help a TON to see the impact in the devTools profiler.
@@ -223,25 +226,34 @@ var ListItem = Backbone.ReuseView.extend({
         ],
         'rank': ['rank',
             function setRank($cachedElement, value){
-                this.$el[0].className = 'stripe-' + (value % 2 ? 'even': 'odd');
                 $cachedElement[0].className = 'group-' + (value % 5);
                 $cachedElement[0].innerHTML = value;
+                // NOTE: you shouldn't have access to $el. need to update
+                // the reuse view to allow for repaint overrider
+                this.$el[0].className = 'stripe-' + (value % 2 ? 'even': 'odd');
             }
         ],
     },
     
     partial: $('.listItem').text(),
     
+    /* 
+        Render is only called once. Allocating a lot of memory on the DOM
+        is expensive. It's worse when you allocated and then destroy memory
+        just to create it again. You will need to keep logic out of the 
+        partials in order to not be tied to be constantly creating and destorying
+        elements in the DOM.
+    */
     render: function(){
         this.$el = $(_.template(this.partial)(this.model.toJSON()));
     }
 });
 
 /*
-Create the pool. 
+    Create the pool. 
 */
 var Pool = Backbone.PerfView.extend({
-    render: function( ) 
+    render: function() 
     {
         var scroll = $('<div class="iscroll">');
         scroll.css({
@@ -263,9 +275,10 @@ var Pool = Backbone.PerfView.extend({
     
     /* 
         Set the static height to have massive speed improvements. 
-        This is optional but highly recommended.
+        This is optional but highly recommended. The index of the collection
+        is passed in so that you can create variable heights and section
+        headers. The value is used to calculate where to place the reuse view.
     */
-    
     estimateHeightAt: function(idx)
     {
         return 143;
