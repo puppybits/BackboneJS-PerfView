@@ -2,109 +2,23 @@
 <head>
 <meta name="viewport" content="width=device-width">
 <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,800' rel='stylesheet' type='text/css'>
-<script src="jquery.min.js"></script>
-<script src="underscore-min.js" ></script>
-<script src="backbone-min.js"></script>
-<script src="iscroll-lite.js"></script>
+<script src="../libs/jquery.min.js"></script>
+<script src="../libs/underscore-min.js" ></script>
+<script src="../libs/backbone-min.js"></script>
+<script src="../libs/iscroll-lite.js"></script>
+<link rel="stylesheet" type="text/css" href="workbench-perf.css"></link>
 
-<script src="PerfView.js"></script>
-<script src="ReuseView.js"></script>
-<style>
-html, body {
-    font-family: 'Open Sans', sans-serif;
-    padding: 0;
-    margin: 0;
-}
-body.stress-test-css .pokéstatus {
-    border-radius: 7px;
-}
-body.stress-test-css .pokéfile {
-    border-radius: 50%;
-    box-shadow: 0 0 0 5px #fff, 0 0 0 6px #FFF, 0 0 0 10px #bada55;
-}
-body.stress-test-css .right {
-    border-radius: 5px;
-    width: calc(100% - 200px);
-    box-shadow: 0 0 8px rgba(0,0,0,0.7);
-}
-body.stress-test-css tags {
-    border-radius: 3px;
-}
+<script src="../src/PerfView.js"></script>
+<script src="../src/ReuseView.js"></script>
 
-row {
-    width: 100%;
-    position: absolute;
-}
-.stripe-odd {
-    background-color: #fff;
-}
-.stripe-even {
-    background-color: #eee;
-}
-.left {
-    float: left;
-    display: inline-block;
-}
-.pokéstatus {
-    float: left;
-    margin: 38px 3px;
-    padding: 7px 10px;
-    background-color: #bada55;
-    color: #FFF;
-    font-weight: bold;
-    text-align: right;
-    width: 50px;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-}
-.pokéfile {
-    width: 70px;
-    height: 70px;
-    margin: 16px;
-    margin-left: 0px;
-    background-color: lightgrey;
-}
-.right {
-    float: left;
-    display: inline-block;
-    border: 1px solid slategrey;
-    margin: 5px;
-    padding: 8px;
-    height: 95px;
-}
-h3 {
-    margin: 0;
-}
-p {
-    margin: 0;
-}
-rate {
-    position: absolute;
-    bottom: 11px;
-}
-rate:before {
-    content: 'heart rate: '
-}
-tags {
-    position: absolute;
-    bottom: 11px;
-    right: 21px;
-    background-color: lightgray;
-    padding: 0 5px;
-}
-rank {
-    position: absolute;
-    top: 7;
-    right: 23;
-    text-align: right;
-}
-
-
-</style>
 
 </head>
 
+<!-- Turn on and off automatic stress tests here. -->
+<!-- Possible tests are: stress-test-css stress-test-events stress-test-autoscroll -->
+
 <body class="stress-test-css stress-test-events">
+
 <script class="listItem" type="text/underscore-template">
 <row class="stripe-<%= rank % 2 ? 'even' : 'odd' %>">
     <div class="left">
@@ -121,14 +35,18 @@ rank {
 </row>
 </script>
 
-
 </body>
 
 
+
 <script>
+
+/* Turn on or off some stress tests via the developer console. Great to get some base line readings. */
+
 var isIOS = (document.documentElement.style.webkitOverflowScrolling !== undefined ? true : false),
 runStressTestEvents = document.body.className.indexOf('stress-test-events') > -1,
 runStressTestAutoscroll = document.body.className.indexOf('stress-test-autoscroll') > -1;
+
 window.stressTests = {
     autoscroll: (function(autoscroll){
         return function( stop )
@@ -178,9 +96,17 @@ window.stressTests = {
 };
 
 
+/* 
+    Build the model. 
 
+    Ramp up the count to tax the system harder. Chrome can support a million
+    models in the collection. But it take 147 MB and a look time to create in JS.
+    There is a lazy loader to only build it a small amount for each interval. It's
+    totally a hack but it's needed for the size load this takes.
+ */
 
-var count = 10000;
+var count = 10000;         // can ramp up to a million on Chrome
+var maxPerLazyLoad = 100;  // 100 is a good level for mobile devices.
 var Person = Backbone.Model.extend({
     pokestatus: null,
     pokefile: null,
@@ -202,7 +128,7 @@ console.time('create model');
 
 (function(collection, i, count){
     var replace = function(){
-        var end = i + 100;
+        var end = i + maxPerLazyLoad;
         for(; i < end; i++)
         {
             p = new Person();
@@ -238,7 +164,32 @@ console.time('create model');
 
 
 var ListItem = Backbone.ReuseView.extend({
-    // NOTE: naming functions helps to see the impact in the devTools profiler
+    // 
+    
+    /*
+        NOTE: performance tip. If you name the anonymous functions it
+        will help a TON to see the impact in the devTools profiler.
+        Also these map functions will be called from the window scope (in next version).
+        This makes it hard to screw perfromance by doing too much when updating
+        the DOM with a new model.
+
+        This is to map the model to the DOM. Data Binding in other frameworks
+        already do this for you. In Backbone a lot of memory and CPU is spent
+        destroying and recreating the DOM. This is the biggest part that improves
+        rendering performance. 
+        
+        The key is the name of the property in the model. The first item in the
+        array is the jQuery selector, the second is the method that will be called
+        when the view needs updating.
+        
+        Setting some properties like images will cause major work to occur. 
+        Images will trigger a network connection to open, download a large amount
+        of data, then it needs to decompress the JPG or PNG into a raw image format
+        then it adds it to the DOM for you. During fast scrolling there's no time
+        to incur the load, also the image load will probably be off the screen before
+        it even downloads. make sure the jquery selector has 'img' in it so that
+        PerfView can not queue new image downloads while it's scrolling fast.
+    */
     modelMap: {
         'pokestatus': ['.pokéstatus', 
             function setStatus($cachedElement, value){
@@ -286,6 +237,9 @@ var ListItem = Backbone.ReuseView.extend({
     }
 });
 
+/*
+Create the pool. 
+*/
 var Pool = Backbone.PerfView.extend({
     render: function( ) 
     {
@@ -307,11 +261,24 @@ var Pool = Backbone.PerfView.extend({
         }
     },
     
+    /* 
+        Set the static height to have massive speed improvements. 
+        This is optional but highly recommended.
+    */
+    
     estimateHeightAt: function(idx)
     {
         return 143;
     },
     
+    /*  
+        The repaint function is responsible to:
+         1. get the model in the collection
+         2. call the super class dequeueView method to get a reuse item from the pool
+         3. call the repaint on the reusable view and pass it the index, position and model
+         4. return the reuse view to the callee
+        This method is required.
+    */ 
     repaint: function( idx, position ) 
     {
         // get object from dequeueView

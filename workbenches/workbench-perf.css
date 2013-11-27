@@ -1,0 +1,93 @@
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+/* CSS classes that are hard on the processor or GPU compositing cycle*/
+body.stress-test-css .pokéstatus {
+    border-radius: 7px;
+}
+body.stress-test-css .pokéfile {
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px #fff, 0 0 0 6px #FFF, 0 0 0 10px #bada55;
+}
+body.stress-test-css .right {
+    border-radius: 5px;
+    width: calc(100% - 200px);
+    box-shadow: 0 0 8px rgba(0,0,0,0.7);
+}
+body.stress-test-css tags {
+    border-radius: 3px;
+}
+
+
+/* Row styling w/ some floats, padding and other normal things */
+row {
+    width: 100%;
+    position: absolute;
+}
+.stripe-odd {
+    background-color: #fff;
+}
+.stripe-even {
+    background-color: #eee;
+}
+.left {
+    float: left;
+    display: inline-block;
+}
+.pokéstatus {
+    float: left;
+    margin: 38px 3px;
+    padding: 7px 10px;
+    background-color: #bada55;
+    color: #FFF;
+    font-weight: bold;
+    text-align: right;
+    width: 50px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+.pokéfile {
+    width: 70px;
+    height: 70px;
+    margin: 16px;
+    margin-left: 0px;
+    background-color: lightgrey;
+}
+.right {
+    float: left;
+    display: inline-block;
+    border: 1px solid slategrey;
+    margin: 5px;
+    padding: 8px;
+    height: 95px;
+}
+h3 {
+    margin: 0;
+}
+p {
+    margin: 0;
+}
+rate {
+    position: absolute;
+    bottom: 11px;
+}
+rate:before {
+    content: 'heart rate: '
+}
+tags {
+    position: absolute;
+    bottom: 11px;
+    right: 21px;
+    background-color: lightgray;
+    padding: 0 5px;
+}
+rank {
+    position: absolute;
+    top: 7;
+    right: 23;
+    text-align: right;
+}
+

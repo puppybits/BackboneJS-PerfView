@@ -21,22 +21,27 @@ var requestAnimationFrame = (function() {
            window.setTimeout(callback, 1000 / 60);
          };
 })().bind(window);
-    
+
+// NOTE: This config is on Backbone.PrefView.config as well for 
+// external performance tweaking
 var config = {
-    batchAppendViews: false, // TODO: settign to true breaks when scrolling up
-    staticHeights: true,
-    fastScrollingRate: 30,
-    scrollingSampleSize: 10,
-    destoryLag: 3.0,
-    drawAhead: 3.0,
-    drawTrigger: 1.0
+    batchAppendViews: false, // Use Document fragments. Could be awesome or suck horribly. default - false.
+    staticHeights: true,     // Give massive speed boost by not asking the DOM for height. default - true.
+    fastScrollingRate: 30,   // Velocity of the scroll to disable images and model event listeners. default - 30.
+    scrollingSampleSize: 10, // Length of array to store scroll speed - default 10
+    destoryLag: 3.0,         // How many pixels above the top fold to leave before recycling DOM elements. Value is a multiplied by the scroll view height. default - 3.0
+    drawAhead: 3.0,          // How many pixels above the below fold to draw on the DOM before needing to start a new redraw. Value is a multiplied by the scroll view height. default - 3.0
+    drawTrigger: 1.0 ,       // Home many pixels behind the drawAhread to wait until triggering DOM elements to move. Value is multiplied by the scroll view height. Must be smaller than drawAhead. default - 1.0
+    debug: {
+        profile: false,     // Allow auto-on when heavy loads are hit. Must have fps true frist. Profile take a ton of extra load. Use sparingly and don't take any time to be real. I've found it's about 6 times slower than normal on desktop Chrome. default - false.
+        fps: false          // super light and informative inspection of scroll perfromance. Turn this on first thing when debugging anything! default - false
+    }
 },
-throttleFastCheck = 0,
-debug = {
-    profile: false, // allow auto-on when heavy loads are hit
-    fps: true // super light and informative inspection of scroll perfromance
-},
+
+throttleFastCheck = 0, // static property to hold fast check settings
+
 _timings = [],
+
 trackFPS = (function(t)
 {
     var log = ( !isIE ? 
@@ -64,12 +69,14 @@ trackFPS = (function(t)
     );
     if (window.ArrayBuffer && window.Float64Array)
     {
-        // NOTE: Chrome hits a max of 63 requestAnimationFrames per second
-        t = new Float64Array(new ArrayBuffer(110*8)); 
+        // NOTE: Chrome hits a max of 63 requestAnimationFrames per second.
+        // If you have more than 1 requestAnimationFrames it will mess up 
+        // these numbers
+        t = new Float64Array(new ArrayBuffer(80*8)); 
     }
     else
     {
-        for(var i=110; i >= 0; i--)
+        for(var i=80; i >= 0; i--)
         {
             t.push(0);
         }
@@ -82,7 +89,7 @@ trackFPS = (function(t)
         cur = t[0];
         t[cur] = delta;
         
-        // pref: adding and popping to array causes leak until GC'd
+        // pref note: adding and popping to array causes leak until GC'd
         last = cur-1;
         sum = t[last] - t[1];
         t[0] = cur = cur + 1;
@@ -248,6 +255,14 @@ dequeueViews = function(view, cachedY, cursor, disposeLimit, isDown)
 
 skipCursorForwards = function(cursor, cachedY, disposeLimit, max, estimateFn)
 {
+    // NOTE: This method can have a performance hit if a very long list
+    // tries to render near the bottom. Each row needs to hit to check the
+    // height. Developers should set static heights so the DOM doesn't
+    // need to calculate the height which is very costly. It was a design
+    // decision to make the view flexible to have section headers and other
+    // variable height rows at the expense of performance on massively long
+    // list. TODO: Offer an advanced way to opt out of calculating each row
+    // to improve perfromance when the developer chooses.
     var estimate, shouldResetCursorEnd, _cursor;
     
     _cursor = Math.min(cachedY.length, cursor[0]);
@@ -377,7 +392,7 @@ lastHeight, speed, shouldResetCursorEnd, isScrollingFast, i,j,y,len, fps, last;
 var update = function(delta) 
 {
     // console.timeStamp('go:'+delta);
-    if (delta)
+    if (config.debug.fps && delta)
     {
         trackFPS(delta, lastScrollY);
         fps = delta;
@@ -421,11 +436,11 @@ var update = function(delta)
             provisioningThreshold = scrollBottom - (scrollHeight * config.drawTrigger);
             
             shouldRedraw = (cachedY[cursor[0]] > provisioningThreshold);
-            if (!shouldRedraw) continue;
+            if (!shouldRedraw) continue; // minimize redraws to let page GPU tiles refresh as little as possible
             
-            last = lastRun(_timings);
+            last = (config.debug.fps ? lastRun() : 0);
             
-            if (debug.profile && last > 100) console.profile('run-' + (fps || 0));
+            if (config.debug.profile && last > 100) console.profile('run-' + (fps || 0));
             
             if (config.batchAppendViews) frag.appendChild($content[0]);
             
@@ -445,17 +460,12 @@ var update = function(delta)
             // validate the height/position of the container
             updateCursor($content, cachedY, view.collection.length, iscroll);
             
-            if (debug.profile && last > 100) console.profileEnd('run-' + (fps || 0));
+            if (config.debug.profile && last > 100) console.profileEnd('run-' + (fps || 0));
             
             if (config.batchAppendViews) $container.appendChild($content);
             
             continue; // don't process the down scrolling
         }
-        
-        
-        
-        // TODO: Wrap as much as possible in functions for easier profiling
-        // TODO: Generalize functions to work either up or down
         
         
         
@@ -469,14 +479,16 @@ var update = function(delta)
         shouldRedraw = (cachedY[cursor[1]] < provisioningThreshold);
         if (!shouldRedraw) continue;
         
-        last = lastRun();
+        last = (config.debug.fps ? lastRun() : 0);
         
-        if (debug.profile && last > 100) console.profile('run-' + (fps || 0));
+        if (config.debug.profile && last > 100) console.profile('run-' + (fps || 0));
         
         
-        // NOTE: Had a document fragment here but it hurts performance. 
+        // NOTE: A document fragment here can hurt performance. 
         // Removing from the DOM forces the GPU tiles to clear and 
         // redraw the texture from scratch on each update call.
+        // IE 11 seems to really hate it and blinks when the items are 
+        // removed and readded. 
         if (config.batchAppendViews) frag.appendChild($content[0]);
         
         // remove unsed items
@@ -504,13 +516,15 @@ var update = function(delta)
         
         // console.log('reuseView count: '+view._pool['li'].length);
         
-        if (debug.profile && last > 100) console.profileEnd('run-'+fps);
+        if (config.debug.profile && last > 100) console.profileEnd('run-'+fps);
     }
     
-    // done update all the pools
+    // wait for the next pre-paint cycle
     if (living) requestAnimationFrame(update);
     
+    // TODO: dispatch an event to wake up anything else that needs requestAnimationFrame work.
     
+    // done. The reflow pipeline will follow and then painting and compositing
 }
 
 
@@ -525,7 +539,7 @@ var PerfView = Backbone.PerfView = function(opts)
     this.collection = opts.collection;
     this._staticHeights = opts.staticHeights || false;
     
-    // hold reference in static to watch multiple poolviews at once
+    // hold reference in static method to watch multiple poolviews at once
     poolviews.push(this);
     
     this.render();
@@ -544,13 +558,19 @@ var PerfView = Backbone.PerfView = function(opts)
     this._$items = $('<div class="PoolViewItems" style="-webkit-transform: translate(0,0,0)">');
     this._$content.append(this._$items);
     
-    // use iScroll to overcome pause JS execution on iOS
-    if (isIOS && window.IScroll) 
+    // use iScroll to overcome pauses JS execution on iOS
+    if (isIOS && window.IScroll)
+    {
         iscroll = new IScroll( this._$container[0] );
+    }
     else if (this._$container[0] === document.body)
+    {
         this._$container.css({height: '100%'});
+    }
     else
+    {
         this._$container.css({overflowY: 'scroll', overflowX:'hidden'});
+    }
     
     // register for requestAnimationFrame to sync/trigger repaints
     living.add += 1;
@@ -592,9 +612,11 @@ _.extend(Backbone.PerfView.prototype, {
         this._pool[id].push(alloced);
         return alloced;
     },
+    
     estimateHeightAt: function(idx){
         // override
     },
+    
     remove: function() {
         // remove count from animation frame
         // backbone super remove
@@ -603,7 +625,7 @@ _.extend(Backbone.PerfView.prototype, {
 
 _.extend(Backbone.PerfView.prototype, Backbone.View.prototype);
 Backbone.PerfView.extend = Backbone.View.extend;
-
+Backbone.PerfView.config = config;
 
 }())
 

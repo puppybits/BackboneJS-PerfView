@@ -30,18 +30,18 @@ module.exports = function( grunt ) {
         define: false,
         module: false,
         require: false,
-        console: false,
-        jasmine: false,
-        Debug: false,
-        Tracker: false
+        console: false
       }
     },
     
     uglify: {
         compress: {
           files: {
-            'prefview.min.js': ['PerfView.js', 'ReuseView.js']
-          }
+            'bin/prefview.min.js': ['PerfView.js', 'ReuseView.js']
+          },
+          options: {
+              sourceMap: 'bin/prefview.min.map.js'
+          },
         }
       }
     
