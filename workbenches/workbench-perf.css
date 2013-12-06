@@ -5,6 +5,15 @@ html, body {
 }
 
 /* CSS classes that are hard on the processor or GPU compositing cycle*/
+body.stress-test-css * {
+/*    text-shadow: 2px 4px 3px rgba(0,0,0,0.3);*/
+}
+body.stress-test-css img {
+/*    filter: blur(1px) contrast(200%);
+    -webkit-filter: blur(1px) contrast(200%);
+    -ms-filter: blur(1px) contrast(200%);
+    -moz-filter: blur(1px) contrast(200%);
+*/}
 body.stress-test-css .pokéstatus {
     border-radius: 7px;
 }

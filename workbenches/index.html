@@ -167,6 +167,7 @@ console.time('Created '+count+' Models');
     
 }(collection, 0, count, maxPerLazyLoad, modelCreationSleepTime));
 
+var tmp = _.template( $('.listItem').text() );
 
 var ListItem = Backbone.ReuseView.extend({
     /*
@@ -245,7 +246,10 @@ var ListItem = Backbone.ReuseView.extend({
         elements in the DOM.
     */
     render: function(){
-        this.$el = $(_.template(this.partial)(this.model.toJSON()));
+        this.$el = $(tmp(this.model.toJSON()));
+        
+        console.log('rendered reuseview');
+        
     }
 });
 
@@ -271,6 +275,9 @@ var Pool = Backbone.PerfView.extend({
         {
             this.$el = $(document.body);
         }
+        
+        console.log('rendered pool');
+        
     },
     
     /* 
