@@ -14,7 +14,7 @@ clearImgs = function(imgs)
 var ReuseView = Backbone.ReuseView = function(opts) 
 {
     // call backbone constructor
-    Backbone.View.prototype.constructor.apply(this, opts);
+    Backbone.View.prototype.constructor.apply(this, [opts]);
     
     this.model = opts.model || null;
     this.forceGPUTexture = opts.forceGPUTexture || false;

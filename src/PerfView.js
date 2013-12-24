@@ -534,7 +534,7 @@ var update = function(delta)
 var PerfView = Backbone.PerfView = function(opts) 
 {
     // call backbone constructor
-    Backbone.View.prototype.constructor.apply(this, opts);
+    Backbone.View.prototype.constructor.apply(this, [opts]);
     
     this.collection = opts.collection;
     this._staticHeights = opts.staticHeights || false;
