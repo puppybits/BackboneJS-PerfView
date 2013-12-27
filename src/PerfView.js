@@ -1,4 +1,117 @@
 (function(){
+
+// This view will be the container for the reuse views. It will
+// control reflow to happen inside this view. New or dirty objects
+// will be stored in a pool to reuse. 
+var PerfView = Backbone.PerfView = function(opts) 
+{
+    // call backbone constructor
+    Backbone.View.prototype.constructor.apply(this, opts);
+
+    this.collection = opts.collection;
+    this._staticHeights = opts.staticHeights || false;
+    this._positionCache = [(opts.paddingTop || this.paddingTop || 0)];
+    
+    // hold reference in static method to watch multiple poolviews at once
+    poolviews.push(this);
+
+    this.render();
+
+    this._$container = this.$el.find(this.$container);
+    if (this._$container.length === 0) this._$container = this.$el;
+    this._$container.css({'position':'realtive', 'width': '100%'});
+    this._$container.css('-webkit-transform','translate3d(0,0,0)');
+
+    this._$content = $('<div id="scroller">');
+    this._$content.css('-webkit-transform','translate3d(0,0,0)');
+    this._$content.css({'position':'absolute', 'width': '100%'});
+    this.$el.append(this._$content);
+    this._$content.css('height', collection.length * this.estimateHeightAt(0));
+
+    this._$items = $('<div class="PoolViewItems" style="-webkit-transform: translate(0,0,0)">');
+    this._$content.append(this._$items);
+
+    // use iScroll to overcome pauses JS execution on iOS
+    if (isIOS && window.IScroll)
+    {
+        iscroll = new IScroll( this._$container[0] );
+    }
+    else if (this._$container[0] === document.body)
+    {
+        this._$container.css({height: '100%'});
+    }
+    else
+    {
+        this._$container.css({overflowY: 'scroll', overflowX:'hidden'});
+    }
+
+    // register for requestAnimationFrame to sync/trigger repaints
+    living.add += 1;
+}
+
+_.extend(Backbone.PerfView.prototype, {
+    collection: null, // need to have the collection on creation
+    paddingTop: 0,
+    
+    _$container: null,
+    _$content: null,
+    _$items: null,
+    _pool: {},
+    _dequeued: {},
+    _cursor: [0,0],
+    _positionCache: [0], // make sure all CSS is loaded before creating the view
+    _speed: [],
+    _forceRepaint: false,
+    _freezeAllocations: false,
+    _staticHeights: false,
+
+    dequeueView: function( id, reuseSubclass, opts ) 
+    {
+        // store in key-value store with the name and the class instance
+        this._dequeued[id] = this._dequeued[id] || [];
+        this._pool[id] = this._pool[id] || [];
+        dequeue = this._dequeued[id].pop();
+        if (dequeue) 
+        {
+            dequeue.model = opts.model;
+            this._pool[id].push(dequeue);
+            dequeue._freezeAllocations(this._freezeAllocations);
+            return dequeue; // instance already in heap
+        }
+    
+        // create new DOM/JS in heap and return
+        var alloced = new reuseSubclass( _.extend({staticHieght:this._staticHeights}, opts) );
+        alloced._reuseId = id;
+        alloced._freezeAllocations(this._freezeAllocations);
+    
+        this._pool[id].push(alloced);
+        return alloced;
+    },
+
+    estimateHeightAt: function(idx){
+        // override
+    },
+
+    refresh: function(){
+        this._forceRepaint = true;
+    },
+    
+    remove: function() {
+        // remove count from animation frame
+        // backbone super remove
+    }
+});
+
+_.extend(Backbone.PerfView.prototype, Backbone.View.prototype);
+Backbone.PerfView.extend = Backbone.View.extend;
+Backbone.PerfView.config = config;
+
+
+
+
+
+// Private
+
 var isIE = (navigator.appVersion.indexOf('Trident') ? true : false);
 var now = (function() 
 {
@@ -303,7 +416,7 @@ skipCursorBackwards = function(cursor, cachedY, disposeLimit, estimateFn)
     if (shouldResetCursorEnd) cursor[0] = cursor[1];
 },
 
-appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max)
+appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max, min)
 {
     // can use document fragment if the reuse views have static heights.
     var reuseView,
@@ -350,7 +463,7 @@ appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max)
         
         cursor[idx] += next;
         
-        cachedY[cursor[idx]] = (cachedY[cursor[idx]-1] + height()) || 0; // hack fix for NaN
+        cachedY[cursor[idx]] = (cachedY[cursor[idx]-1] + height()) || min; // hack fix for NaN
     }
 
     if (cursor[idx] < 0) cursor[idx] = 0;
@@ -435,9 +548,10 @@ var update = function(delta)
             provisionLimit = scrollY - (scrollHeight * config.drawAhead);
             provisioningThreshold = scrollBottom - (scrollHeight * config.drawTrigger);
             
-            shouldRedraw = (cachedY[cursor[0]] > provisioningThreshold);
+            shouldRedraw = (view._forceRepaint || cachedY[cursor[0]] > provisioningThreshold);
             if (!shouldRedraw) continue; // minimize redraws to let page GPU tiles refresh as little as possible
             
+            view._forceRepaint = false;
             last = (config.debug.fps ? lastRun() : 0);
             
             if (config.debug.profile && last > 100) console.profile('run-' + (fps || 0));
@@ -450,12 +564,12 @@ var update = function(delta)
             // fast skip the cursor to the Y of the scroll view 
             skipCursorBackwards(cursor, 
                             cachedY, 
-                            disposeLimit, 
-                            view.collection.length, 
+                            disposeLimit,
                             view.estimateHeightAt);
                             
+            
             // render the new view
-            appendViews(view, cachedY, cursor, provisionLimit, false);
+            appendViews(view, cachedY, cursor, provisionLimit, false, 0, view.paddingTop);
             
             // validate the height/position of the container
             updateCursor($content, cachedY, view.collection.length, iscroll);
@@ -476,9 +590,10 @@ var update = function(delta)
         provisionLimit = Math.min(scrollBottom + (scrollHeight * config.drawAhead), contentHeight);
         provisioningThreshold = scrollBottom + (scrollHeight * config.drawTrigger);
         
-        shouldRedraw = (cachedY[cursor[1]] < provisioningThreshold);
+        shouldRedraw = (view._forceRepaint || cachedY[cursor[1]] < provisioningThreshold);
         if (!shouldRedraw) continue;
         
+        view._forceRepaint = false;
         last = (config.debug.fps ? lastRun() : 0);
         
         if (config.debug.profile && last > 100) console.profile('run-' + (fps || 0));
@@ -526,106 +641,6 @@ var update = function(delta)
     
     // done. The reflow pipeline will follow and then painting and compositing
 }
-
-
-// This view will be the container for the reuse views. It will
-// control reflow to happen inside this view. New or dirty objects
-// will be stored in a pool to reuse. 
-var PerfView = Backbone.PerfView = function(opts) 
-{
-    // call backbone constructor
-    Backbone.View.prototype.constructor.apply(this, opts);
-    
-    this.collection = opts.collection;
-    this._staticHeights = opts.staticHeights || false;
-    
-    // hold reference in static method to watch multiple poolviews at once
-    poolviews.push(this);
-    
-    this.render();
-    
-    this._$container = this.$el.find(this.$container);
-    if (this._$container.length === 0) this._$container = this.$el;
-    this._$container.css({'position':'realtive', 'width': '100%'});
-    this._$container.css('-webkit-transform','translate3d(0,0,0)');
-    
-    this._$content = $('<div id="scroller">');
-    this._$content.css('-webkit-transform','translate3d(0,0,0)');
-    this._$content.css({'position':'absolute', 'width': '100%'});
-    this.$el.append(this._$content);
-    this._$content.css('height', collection.length * this.estimateHeightAt(0));
-    
-    this._$items = $('<div class="PoolViewItems" style="-webkit-transform: translate(0,0,0)">');
-    this._$content.append(this._$items);
-    
-    // use iScroll to overcome pauses JS execution on iOS
-    if (isIOS && window.IScroll)
-    {
-        iscroll = new IScroll( this._$container[0] );
-    }
-    else if (this._$container[0] === document.body)
-    {
-        this._$container.css({height: '100%'});
-    }
-    else
-    {
-        this._$container.css({overflowY: 'scroll', overflowX:'hidden'});
-    }
-    
-    // register for requestAnimationFrame to sync/trigger repaints
-    living.add += 1;
-}
-
-_.extend(Backbone.PerfView.prototype, {
-    collection: null, // need to have the collection on creation
-    
-    _$container: null,
-    _$content: null,
-    _$items: null,
-    _pool: {},
-    _dequeued: {},
-    _cursor: [0,0],
-    _positionCache: [0], // make sure all CSS is loaded before creating the view
-    _speed: [],
-    _freezeAllocations: false,
-    _staticHeights: false,
-    
-    dequeueView: function( id, reuseSubclass, opts ) 
-    {
-        // store in key-value store with the name and the class instance
-        this._dequeued[id] = this._dequeued[id] || [];
-        this._pool[id] = this._pool[id] || [];
-        dequeue = this._dequeued[id].pop();
-        if (dequeue) 
-        {
-            dequeue.model = opts.model;
-            this._pool[id].push(dequeue);
-            dequeue._freezeAllocations(this._freezeAllocations);
-            return dequeue; // instance already in heap
-        }
-        
-        // create new DOM/JS in heap and return
-        var alloced = new reuseSubclass( _.extend({staticHieght:this._staticHeights}, opts) );
-        alloced._reuseId = id;
-        alloced._freezeAllocations(this._freezeAllocations);
-        
-        this._pool[id].push(alloced);
-        return alloced;
-    },
-    
-    estimateHeightAt: function(idx){
-        // override
-    },
-    
-    remove: function() {
-        // remove count from animation frame
-        // backbone super remove
-    }
-});
-
-_.extend(Backbone.PerfView.prototype, Backbone.View.prototype);
-Backbone.PerfView.extend = Backbone.View.extend;
-Backbone.PerfView.config = config;
 
 }())
 
