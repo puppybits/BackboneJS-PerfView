@@ -47,7 +47,7 @@ var isIOS = (document.documentElement.style.webkitOverflowScrolling !== undefine
 runStressTestEvents = document.body.className.indexOf('stress-test-events') > -1,
 runStressTestAutoscroll = document.body.className.indexOf('stress-test-autoscroll') > -1;
 
-window.stressTests = {
+window.stress = {
     autoscroll: (function(autoscroll){
         return function( stop )
         {
@@ -326,8 +326,8 @@ if (isIOS)
 
 
 // automation tests
-if (runStressTestEvents) stressTests.events();
-if (runStressTestAutoscroll) stressTests.autoScroll();
+if (runStressTestEvents) stress.events();
+if (runStressTestAutoscroll) stress.autoScroll();
 
 </script>
 </html>
