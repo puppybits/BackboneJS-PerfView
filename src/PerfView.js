@@ -394,6 +394,8 @@ skipCursorForwards = function(cursor, cachedY, disposeLimit, max, estimateFn)
     if (shouldResetCursorEnd) cursor[1] = cursor[0];
     
     if (!cachedY[cursor[1]]) cachedY[cursor[1]] = 0;
+
+    cursor[0] = cursor[1] = Math.max(0, _cursor-1);
 },
 
 skipCursorBackwards = function(cursor, cachedY, disposeLimit, estimateFn)
@@ -458,7 +460,7 @@ appendViews = function(view, cachedY, cursor, provisionLimit, isDown, max, min)
         reuseView._idx = cursor[idx];
         reuseView._top = cachedY[cursor[idx]];
         
-        // move from unsed fragment to the items
+        // move from unused fragment to the items
         $items.appendChild(reuseView.$el[0]);
         
         cursor[idx] += next;
@@ -586,7 +588,7 @@ var update = function(delta)
         // is scrolling down (normal)
         
         // redraw as few times as possible and in groups of elements
-        disposeLimit = scrollY - (scrollHeight * config.destoryLag);
+        disposeLimit = Math.max(0, scrollY - (scrollHeight * config.destoryLag));
         provisionLimit = Math.min(scrollBottom + (scrollHeight * config.drawAhead), contentHeight);
         provisioningThreshold = scrollBottom + (scrollHeight * config.drawTrigger);
         
