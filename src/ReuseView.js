@@ -129,7 +129,7 @@ _.extend(ReuseView.prototype, {
         
         this._saveMemoryMode = shouldDelay;
         
-        if (!shouldDelay) return clearImgs(this._$imgs);
+        if (shouldDelay) return clearImgs(this._$imgs);
         
         // else when turning back on then draw images and listen for model events
         this._repurpose();
