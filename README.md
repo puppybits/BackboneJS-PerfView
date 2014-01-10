@@ -1,21 +1,36 @@
 ### Lighting fast Backbone
 
-* Achieve native-level performance with the flexibility and speed of web development.
+Demo at [puppybits.com/perfview/workbenches/index.html](http://puppybits.com/perfview/workbenches/index.html)
+
+* Achieve native-level performance on high-scroll view wth very little work.
+* Cross-browser & cross-platform support. Tested on IE9/10/11, Firefox, Safari 5/6, Chrome, iPad mini on iOS6/7 and Nexus 7 on Android 4.2
 * Render pages lighting fast no matter the size of the model collection.
 * ALWAYS scroll at 60 FPS on desktop. Mobile is usually at 60 FPS. Very complex views on mobile can fluctuate between 45 and 60 FPS.
-* Stops memory from creaping up. Most PerfView will never be larger than 10 MBs.
+* Stops memory creep. Most PerfView will never be larger than 10 MBs.
 * Optimizes memory usage, network calls, image decoding, heavy DOM updates and GPU texture memory all with one simple API. Basically 90% of what needs to be done to have a performant app is done by the library.
 * Easily tune performance and see the impact that CSS, DOM or JS has on your app.
-* Especially needed on mobile web apps where memory, network and cpu time is all very low.
+* Especially useful on cross-platform and mobile web apps where memory, network and cpu are all very weak.
 
 
 #### Getting Started 
 
+1. Create a simple Backbone Model.  
+```
     var Person = Backbone.Model.extend({
         name: 'Joe',
         profileImage: 'joe.jpg'
     });
+```
+2. Create a logic-less template for a single row. Attach it directly to a single model.
+```html
+    <div class='row'>
+        <span class='username'><%= name =></span>
+        <img class='profile' src='<%= profileImage =>'>
+    </div>
+```
     
+3. Create your own view off of the Backbone.ReuseView (which is a subclass of the normal Backbone.View). The "magic" happens in the model mapper. It is an object with the name of the property in the model. Then an array with the first item is a jquery selector for the element you want. The second is a function that will be called with the model.property is changed. In the function you can do whatever you like to update the DOM with the new value.
+```javascript
     var OneRow = Backbone.ReuseView.extend({
         template: _.template( $("<div class='row'><span class='username'><%= name =></span><img class='profile' src='<%= profileImage =>'></div>")),
         
@@ -38,7 +53,11 @@
             ]
         }
     });
-    
+```
+4. Create a PerfView to contain your rows. There is an extra function you need to implement called repaint. Repaint will be called when a single item in the Model Collection needs to be rendered. It will pass in the idx in the collection and the top position that the new row should be at.  
+First you will need to call `this.dequeueView` and pass in a friendly name for the type of row you want and the second argument is the ReuseView you would like. Internally it will either use a 'dirty' view if available or create a new one and pass it back. 
+Next you call `repaint` on the reuse view instance and pass in the index it's at the on the collection, the top position and the model to be rendered. Lastly you need to return the new instance of the reuseView.
+```javascript
     var MyPerfView = Backbone.PerfView.extend({
         // This will render the container for the rows.
         render: function() 
@@ -59,17 +78,22 @@
             return item;
         }
     });
-    
+```  
+5. Time to wire it all up and get running. Create a collection with all the models.
+```javascript
     // Create your collection.
     var collection = new Backbone.Collection(), p;
     for (var i=0; i<1000; i++)
     {
         collection.add(new Person({name:'Joe',profileImage:'joe.png'}), {at:i})
     }
-    
+```
+6. Create a new instance of your PerfView and pass in an object with the collection you created. Attach it to the DOM and your done.
+```javascript
     // Create the perf view and pass in the collection.
     var pool = new MyPerfView({collection: collection});
     $(document.body).append(pool);
+```
 
 #### Starting the Workbench
 
