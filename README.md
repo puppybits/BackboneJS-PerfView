@@ -15,7 +15,8 @@ Demo at [puppybits.com/perfview/workbenches/index.html](http://puppybits.com/per
 #### Getting Started 
 
 1. Create a simple Backbone Model.  
-```
+```javascript
+
     var Person = Backbone.Model.extend({
         name: 'Joe',
         profileImage: 'joe.jpg'
@@ -81,6 +82,7 @@ Next you call `repaint` on the reuse view instance and pass in the index it's at
 ```  
 5. Time to wire it all up and get running. Create a collection with all the models.
 ```javascript
+
     // Create your collection.
     var collection = new Backbone.Collection(), p;
     for (var i=0; i<1000; i++)
@@ -90,6 +92,7 @@ Next you call `repaint` on the reuse view instance and pass in the index it's at
 ```
 6. Create a new instance of your PerfView and pass in an object with the collection you created. Attach it to the DOM and your done.
 ```javascript
+
     // Create the perf view and pass in the collection.
     var pool = new MyPerfView({collection: collection});
     $(document.body).append(pool);
