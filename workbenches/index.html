@@ -18,7 +18,12 @@
 <!-- Possible tests are: stress-test-css stress-test-events stress-test-autoscroll -->
 
 <body class="stress-test-css stress-test-events">
-
+    <div id="header" style="width: 100%; padding-bottom: 20px;">
+        <h1 style="font-size: 16px;">PrefView - A JavaScript framework for infinite scroll views on desktop, table and mobile.</h1>
+        <p style="font-size: 12px;">Lighting fast page loads and consistant high FPS. See the Github project for details: 
+            <a href='https://github.com/puppybits/BackboneJS-PerfView'>github.com/puppybits/BackboneJS-PerfView</a>
+        </p>
+    </div>
 <script class="listItem" type="text/underscore-template">
 <row class="stripe-<%= rank % 2 ? 'even' : 'odd' %>">
     <div class="left">
@@ -291,7 +296,7 @@ var Pool = Backbone.PerfView.extend({
         return 143;
     },
     
-    paddingTop: 22,
+    paddingTop: 0,
     
     /*  
         The repaint function is responsible to:

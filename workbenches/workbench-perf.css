@@ -30,6 +30,7 @@ body.stress-test-css tags {
     border-radius: 3px;
 }
 
+.iscroll, .scroller {background-color: #FFFFF;}
 
 /* Row styling w/ some floats, padding and other normal things */
 row {
