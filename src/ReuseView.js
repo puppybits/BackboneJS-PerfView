@@ -9,6 +9,13 @@ clearImgs = function(imgs)
         imgs[i].src = null;
         imgs[i].src = '';
     }
+},
+getProps = function(model, props, i, len){
+    var get = model.at || model.get || function(p){ return model[p]; }
+    len = len || props.length - 1;
+    if (i !== len)
+        return getProps(get.call(model, props[i]), props, i+1, len);
+    return get.call(model, props[i]);
 }
 
 var ReuseView = Backbone.ReuseView = function(opts) 
@@ -67,22 +74,22 @@ _.extend(ReuseView.prototype, {
             this.model = model;
         }
         
-        var sel, el, val, fnc;
-        for(name in this.modelMap)
+        var sel, el, val, fnc, prop, props;
+        for(prop in this.modelMap)
         {
-            sel = this.modelMap[name][0];
+            sel = this.modelMap[prop][0];
             if (this._saveMemoryMode && isImg.exec(sel)) continue;
             
             // register for new events if not saving memory
             if (!this._saveMemoryMode)
             {
-                this.model.on('change:'+name, _.bind(this._modelChanged, this));
+                this.model.on('change:'+prop, _.bind(this._modelChanged, this));
             }
             
             // update the DOM
-            el = this._$cached[name];
-            val = this.model.get(name);
-            fnc = this.modelMap[name][1];
+            el = this._$cached[prop];
+            val = getProps(this.model, prop.split('.'), 0);
+            fnc = this.modelMap[prop][1];
             
             fnc.call(this, el, val)
         }

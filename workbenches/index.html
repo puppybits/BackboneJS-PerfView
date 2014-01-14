@@ -124,6 +124,11 @@ var Person = Backbone.Model.extend({
     rank: null
 });
 
+var Name = Backbone.Model.extend({
+    firstname: null,
+    lastname: null
+})
+
 var collection = new Backbone.Collection(), p;
 collection.length = count;
 window.console = window.console || {};
@@ -138,11 +143,22 @@ console.time('Created '+count+' Models');
         var end = i + perInterval;
         for(; i < end; i++)
         {
+            var titles = new Backbone.Collection();
+            titles.add(new Name({
+                    firstname:['Ben', 'Wes', 'George', 'Scott', 'Jake'][Math.floor(Math.random()*5)],
+                    lastname:[' Jones', ' Smith', ' Ranger', ' Taki', ' Perce'][Math.floor(Math.random()*5)]
+                },
+                {parse:true}));
+            titles.add(new Name({
+                    firstname:['Ben', 'Wes', 'George', 'Scott', 'Jake'][Math.floor(Math.random()*5)],
+                    lastname:[' Jones', ' Smith', ' Ranger', ' Taki', ' Perce'][Math.floor(Math.random()*5)]
+                },
+                {parse:true}));
             p = new Person();
             p.set('pokestatus', 'ready');
             p.set('pokefile', null);
             p.set('pokefile', 'https://graph.facebook.com/'+Math.floor((Math.random()*100000)+10000)+'/picture?type=large');
-            p.set('title', ['Ben', 'Wes', 'George', 'Scott', 'Jake'][Math.floor(Math.random()*5)] + [' Jones', ' Smith', ' Ranger', ' Taki', ' Perce'][Math.floor(Math.random()*5)])
+            p.set('title', titles);
             p.set('body', ['Lorem ipsum dolor sit amet, dictas splendide pertinacia te mel.',
             'Stet vivendo quaerendum id mei, per te cibo ignota ocurreret.',
             'Sed ut wisi disputando.',
@@ -210,9 +226,9 @@ var ListItem = Backbone.ReuseView.extend({
                 $cachedElement[0].src = value;
             }
         ],
-        'title': ['h3',
-            function setTitle($cachedElement, value){
-                $cachedElement[0].innerHTML = value;
+        'title.1': ['h3',
+            function setTitle($cachedElement, model){
+                $cachedElement[0].innerHTML = model.get('lastname')+", "+model.get('firstname');
             }
         ],
         'body': ['p',
